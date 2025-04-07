@@ -1,60 +1,58 @@
 
-import { Shield } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Shield, Github, Twitter } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 const Footer = () => {
   return (
-    <footer className="bg-safespeak-dark-accent border-t border-white/10 py-12 px-4">
-      <div className="container mx-auto">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
-          {/* Logo and Info */}
-          <div className="md:col-span-1">
-            <Link to="/" className="flex items-center gap-2 text-white mb-4">
+    <footer className="bg-safespeak-dark-accent/50 border-t border-white/5 py-8">
+      <div className="container mx-auto px-4">
+        <div className="flex flex-col md:flex-row justify-between items-center">
+          <div className="mb-6 md:mb-0">
+            <Link to="/" className="flex items-center gap-2">
               <Shield className="h-6 w-6 text-safespeak-blue" />
-              <span className="text-xl font-bold">Safe<span className="text-safespeak-blue">Speak</span></span>
+              <span className="text-lg font-bold">Safe<span className="text-safespeak-blue">Speak</span></span>
             </Link>
-            <p className="text-white/60 text-sm mb-4">
-              Secure, anonymous crime reporting powered by blockchain and AI.
+            <p className="text-white/60 text-sm mt-2 max-w-sm">
+              Anonymous crime reporting platform secured by blockchain technology.
             </p>
           </div>
-
-          {/* Quick Links */}
-          <div>
-            <h3 className="font-medium text-white mb-4">Quick Links</h3>
-            <ul className="space-y-2">
-              <li><Link to="/" className="text-white/60 hover:text-safespeak-blue transition-colors text-sm">Home</Link></li>
-              <li><Link to="/about" className="text-white/60 hover:text-safespeak-blue transition-colors text-sm">About Us</Link></li>
-              <li><Link to="/report" className="text-white/60 hover:text-safespeak-blue transition-colors text-sm">Report Crime</Link></li>
-              <li><Link to="/track" className="text-white/60 hover:text-safespeak-blue transition-colors text-sm">Track Report</Link></li>
-            </ul>
-          </div>
-
-          {/* Legal */}
-          <div>
-            <h3 className="font-medium text-white mb-4">Legal</h3>
-            <ul className="space-y-2">
-              <li><Link to="/privacy" className="text-white/60 hover:text-safespeak-blue transition-colors text-sm">Privacy Policy</Link></li>
-              <li><Link to="/terms" className="text-white/60 hover:text-safespeak-blue transition-colors text-sm">Terms of Service</Link></li>
-              <li><Link to="/faq" className="text-white/60 hover:text-safespeak-blue transition-colors text-sm">FAQ</Link></li>
-            </ul>
-          </div>
-
-          {/* Contact */}
-          <div>
-            <h3 className="font-medium text-white mb-4">Contact</h3>
-            <p className="text-white/60 text-sm">
-              For general inquiries, please email us at:
-            </p>
-            <a href="mailto:contact@safespeak.io" className="text-safespeak-blue hover:underline text-sm">
-              contact@safespeak.io
-            </a>
+          
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-8 md:gap-12 text-center md:text-left">
+            <div>
+              <h4 className="font-medium mb-3">Platform</h4>
+              <ul className="space-y-2 text-white/60 text-sm">
+                <li><Link to="/about" className="hover:text-white transition-colors">About Us</Link></li>
+                <li><Link to="/faq" className="hover:text-white transition-colors">FAQ</Link></li>
+                <li><Link to="/" className="hover:text-white transition-colors">Security</Link></li>
+              </ul>
+            </div>
+            
+            <div>
+              <h4 className="font-medium mb-3">Resources</h4>
+              <ul className="space-y-2 text-white/60 text-sm">
+                <li><a href="#" className="hover:text-white transition-colors">Documentation</a></li>
+                <li><a href="#" className="hover:text-white transition-colors">Help Center</a></li>
+                <li><a href="#" className="hover:text-white transition-colors">Privacy Policy</a></li>
+              </ul>
+            </div>
+            
+            <div>
+              <h4 className="font-medium mb-3">Connect</h4>
+              <div className="flex justify-center md:justify-start space-x-4">
+                <a href="#" className="text-white/60 hover:text-white transition-colors">
+                  <Github className="h-5 w-5" />
+                </a>
+                <a href="#" className="text-white/60 hover:text-white transition-colors">
+                  <Twitter className="h-5 w-5" />
+                </a>
+              </div>
+            </div>
           </div>
         </div>
-
-        <div className="border-t border-white/10 mt-8 pt-8 text-center">
-          <p className="text-white/60 text-sm">
-            © {new Date().getFullYear()} SafeSpeak. All rights reserved.
-          </p>
+        
+        <div className="mt-8 pt-6 border-t border-white/5 flex flex-col md:flex-row justify-between items-center text-white/60 text-sm">
+          <p>© {new Date().getFullYear()} SafeSpeak. All rights reserved.</p>
+          <p className="mt-2 md:mt-0">Made with privacy & security in mind.</p>
         </div>
       </div>
     </footer>

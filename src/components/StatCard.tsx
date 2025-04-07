@@ -1,54 +1,44 @@
 
-import { LucideIcon } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { motion } from 'framer-motion';
+import { ArrowDown, ArrowUp, LucideIcon } from 'lucide-react';
 
 interface StatCardProps {
   title: string;
-  value: string | number;
+  value: string;
   icon: LucideIcon;
-  description?: string;
   trend?: {
     value: number;
     isPositive: boolean;
   };
-  className?: string;
 }
 
-const StatCard = ({
-  title,
-  value,
-  icon: Icon,
-  description,
-  trend,
-  className,
-}: StatCardProps) => {
+const StatCard = ({ title, value, icon: Icon, trend }: StatCardProps) => {
   return (
-    <div className={cn("stat-card", className)}>
-      <div className="flex items-start justify-between">
-        <div>
-          <p className="text-sm text-white/70">{title}</p>
-          <p className="text-2xl font-semibold mt-1">{value}</p>
-          {description && <p className="text-xs text-white/60 mt-1">{description}</p>}
-        </div>
-        <div className="bg-safespeak-blue/15 p-2 rounded-lg">
-          <Icon className="h-6 w-6 text-safespeak-blue" />
-        </div>
+    <motion.div 
+      className="stat-card"
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.3 }}
+      whileHover={{ translateY: -5 }}
+    >
+      <div className="flex items-center justify-between">
+        <Icon className="h-6 w-6 text-white/70" />
+        
+        {trend && (
+          <div className={`flex items-center ${trend.isPositive ? 'text-safespeak-green' : 'text-red-400'}`}>
+            {trend.isPositive ? (
+              <ArrowUp className="h-3 w-3 mr-1" />
+            ) : (
+              <ArrowDown className="h-3 w-3 mr-1" />
+            )}
+            <span className="text-xs font-medium">{trend.value}%</span>
+          </div>
+        )}
       </div>
       
-      {trend && (
-        <div className="flex items-center mt-2">
-          <div
-            className={cn(
-              "text-xs font-medium flex items-center",
-              trend.isPositive ? "text-safespeak-green" : "text-red-500"
-            )}
-          >
-            {trend.isPositive ? "↑" : "↓"} {Math.abs(trend.value)}%
-          </div>
-          <span className="text-xs text-white/60 ml-1">from last month</span>
-        </div>
-      )}
-    </div>
+      <h3 className="text-3xl font-bold mt-2">{value}</h3>
+      <p className="text-white/70 text-sm">{title}</p>
+    </motion.div>
   );
 };
 

@@ -1,90 +1,148 @@
 
 import { useState } from "react";
-import { Shield, Menu, X, LogIn, UserPlus } from "lucide-react";
-import { Link } from "react-router-dom";
-import { 
-  Sheet, 
-  SheetContent, 
-  SheetTrigger 
-} from "@/components/ui/sheet";
+import { motion } from "framer-motion";
+import { Shield, Menu, X, LogOut, FilePenLine, Clock, MessageSquare, Home } from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
+import { useToast } from "@/components/ui/use-toast";
+import { useAuth } from "../contexts/AuthContext";
 
 const Navbar = () => {
   const [isOpen, setIsOpen] = useState(false);
+  const { user, logout } = useAuth();
+  const navigate = useNavigate();
+  const { toast } = useToast();
+
+  const handleLogout = () => {
+    logout();
+    toast({
+      title: "Logged Out",
+      description: "You have been securely logged out.",
+    });
+    navigate('/');
+  };
+
+  const navItems = [
+    { label: 'Dashboard', icon: Home, path: '/dashboard' },
+    { label: 'Report Crime', icon: FilePenLine, path: '/report' },
+    { label: 'Track Report', icon: Clock, path: '/track' },
+    { label: 'Feedback', icon: MessageSquare, path: '/feedback' },
+  ];
 
   return (
     <header className="fixed top-0 left-0 w-full z-50 bg-safespeak-dark/80 backdrop-blur-md border-b border-white/10">
-      <div className="container mx-auto flex items-center justify-between py-4 px-4 md:px-6">
+      <div className="container mx-auto flex items-center justify-between py-4 px-4">
         {/* Logo */}
-        <Link to="/" className="flex items-center gap-2 text-white">
-          <Shield className="h-8 w-8 text-safespeak-blue" />
-          <span className="text-xl font-bold">Safe<span className="text-safespeak-blue">Speak</span></span>
-        </Link>
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ duration: 0.5 }}
+        >
+          <Link to={user ? "/dashboard" : "/"} className="flex items-center gap-2 text-white">
+            <Shield className="h-7 w-7 text-safespeak-blue" />
+            <span className="text-xl font-bold">Safe<span className="text-safespeak-blue">Speak</span></span>
+          </Link>
+        </motion.div>
 
         {/* Desktop Navigation */}
-        <nav className="hidden md:flex items-center gap-6">
-          <Link to="/" className="text-white/80 hover:text-white transition-colors">Home</Link>
-          <Link to="/about" className="text-white/80 hover:text-white transition-colors">About</Link>
-          <Link to="/faq" className="text-white/80 hover:text-white transition-colors">FAQ</Link>
-          <div className="flex items-center gap-3">
-            <Button variant="outline" size="sm" className="flex items-center gap-2">
-              <LogIn className="h-4 w-4" />
-              <span>Login</span>
-            </Button>
-            <Button className="flex items-center gap-2 bg-safespeak-blue hover:bg-safespeak-blue/90">
-              <UserPlus className="h-4 w-4" />
-              <span>Sign Up</span>
-            </Button>
-          </div>
-        </nav>
+        {user && (
+          <motion.nav 
+            className="hidden md:flex items-center gap-6"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ duration: 0.5, delay: 0.2 }}
+          >
+            {navItems.map((item) => (
+              <Link 
+                key={item.label}
+                to={item.path} 
+                className="text-white/80 hover:text-white transition-colors flex items-center gap-1.5"
+              >
+                <item.icon className="h-4 w-4" />
+                <span>{item.label}</span>
+              </Link>
+            ))}
+            
+            <div className="flex items-center gap-3">
+              <div className="flex items-center gap-2 bg-white/5 px-3 py-1.5 rounded-full">
+                <span className="h-2 w-2 rounded-full bg-safespeak-green"></span>
+                <span className="text-sm">{user.pseudonym}</span>
+              </div>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="flex items-center gap-1.5"
+                onClick={handleLogout}
+              >
+                <LogOut className="h-3.5 w-3.5" />
+                <span>Logout</span>
+              </Button>
+            </div>
+          </motion.nav>
+        )}
 
         {/* Mobile Navigation */}
-        <Sheet open={isOpen} onOpenChange={setIsOpen}>
-          <SheetTrigger asChild className="md:hidden">
-            <Button variant="ghost" size="icon">
-              <Menu className="h-6 w-6" />
-              <span className="sr-only">Toggle menu</span>
-            </Button>
-          </SheetTrigger>
-          <SheetContent side="right" className="bg-safespeak-dark-accent border-l border-white/10">
-            <nav className="flex flex-col gap-6 mt-8">
-              <Link 
-                to="/" 
-                className="text-lg font-medium text-white" 
-                onClick={() => setIsOpen(false)}
-              >
-                Home
-              </Link>
-              <Link 
-                to="/about" 
-                className="text-lg font-medium text-white/80 hover:text-white transition-colors" 
-                onClick={() => setIsOpen(false)}
-              >
-                About
-              </Link>
-              <Link 
-                to="/faq" 
-                className="text-lg font-medium text-white/80 hover:text-white transition-colors" 
-                onClick={() => setIsOpen(false)}
-              >
-                FAQ
-              </Link>
-              <div className="flex flex-col gap-3 mt-4">
-                <Button variant="outline" onClick={() => setIsOpen(false)} className="w-full justify-center">
-                  <LogIn className="h-4 w-4 mr-2" />
-                  <span>Login</span>
-                </Button>
-                <Button 
-                  className="w-full justify-center bg-safespeak-blue hover:bg-safespeak-blue/90"
-                  onClick={() => setIsOpen(false)}
-                >
-                  <UserPlus className="h-4 w-4 mr-2" />
-                  <span>Sign Up</span>
-                </Button>
+        {user && (
+          <Sheet open={isOpen} onOpenChange={setIsOpen}>
+            <SheetTrigger asChild className="md:hidden">
+              <Button variant="ghost" size="icon">
+                <Menu className="h-6 w-6" />
+                <span className="sr-only">Toggle menu</span>
+              </Button>
+            </SheetTrigger>
+            <SheetContent side="right" className="bg-safespeak-dark-accent border-l border-white/10">
+              <div className="flex flex-col h-full">
+                <div className="flex items-center justify-between py-4">
+                  <div className="flex items-center gap-2">
+                    <Shield className="h-6 w-6 text-safespeak-blue" />
+                    <span className="font-semibold">SafeSpeak</span>
+                  </div>
+                  <Button variant="ghost" size="icon" onClick={() => setIsOpen(false)}>
+                    <X className="h-5 w-5" />
+                  </Button>
+                </div>
+                
+                <div className="py-4">
+                  <div className="px-3 py-2 bg-white/5 rounded-lg flex items-center gap-2 mb-6">
+                    <span className="h-2 w-2 rounded-full bg-safespeak-green"></span>
+                    <span className="text-sm">Logged in as: {user.pseudonym}</span>
+                  </div>
+                  
+                  <nav className="flex flex-col gap-1">
+                    {navItems.map((item) => (
+                      <Link
+                        key={item.label}
+                        to={item.path}
+                        className="flex items-center gap-3 px-3 py-2.5 rounded-lg hover:bg-white/5"
+                        onClick={() => setIsOpen(false)}
+                      >
+                        <div className="bg-white/10 p-2 rounded">
+                          <item.icon className="h-5 w-5" />
+                        </div>
+                        <span>{item.label}</span>
+                      </Link>
+                    ))}
+                  </nav>
+                </div>
+                
+                <div className="mt-auto pt-6 border-t border-white/10">
+                  <Button 
+                    variant="outline" 
+                    className="w-full flex items-center justify-center gap-2"
+                    onClick={() => {
+                      setIsOpen(false);
+                      handleLogout();
+                    }}
+                  >
+                    <LogOut className="h-4 w-4" />
+                    <span>Logout</span>
+                  </Button>
+                </div>
               </div>
-            </nav>
-          </SheetContent>
-        </Sheet>
+            </SheetContent>
+          </Sheet>
+        )}
       </div>
     </header>
   );
