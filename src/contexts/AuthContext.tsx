@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, useEffect } from 'react';
 
 interface User {
@@ -72,16 +73,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const googleAdminLogin = async () => {
-    const adminUser = { 
-      id: 'google-admin-id', 
-      pseudonym: 'Google Admin', 
+    // In a real application, this would integrate with Google OAuth
+    // Simulating successful Google authentication
+    const googleUser = { 
+      id: `google-admin-${Date.now()}`, 
+      pseudonym: 'Google Admin',
+      fullName: 'Google User', 
       isAdmin: true,
-      email: 'google-admin@safespeak.com',
+      email: 'google-admin@gmail.com' 
     };
-    setUser(adminUser);
+    
+    setUser(googleUser);
     setIsAuthenticated(true);
     setIsAdmin(true);
-    localStorage.setItem('user', JSON.stringify(adminUser));
+    localStorage.setItem('user', JSON.stringify(googleUser));
   };
 
   const adminRegister = async (fullName: string, email: string, password: string) => {

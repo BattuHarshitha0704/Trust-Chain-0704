@@ -15,7 +15,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import { Shield, LogIn, Loader2, Mail } from "lucide-react";
+import { Shield, LogIn, Loader2 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { motion } from "framer-motion";
 import Navbar from "@/components/Navbar";
@@ -35,7 +35,7 @@ const formSchema = z.object({
 type FormValues = z.infer<typeof formSchema>;
 
 const AdminLogin = () => {
-  const { adminLogin } = useAuth();
+  const { adminLogin, googleAdminLogin } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
@@ -73,12 +73,12 @@ const AdminLogin = () => {
   const handleGoogleLogin = async () => {
     setIsGoogleLoading(true);
     try {
-      // This will be implemented in the AuthContext
-      // await googleAdminLogin();
+      await googleAdminLogin();
       toast({
-        title: "Google login is not yet implemented",
-        description: "Please use email and password for now.",
+        title: "Google login successful",
+        description: "Welcome to the admin dashboard.",
       });
+      navigate("/admin");
     } catch (error) {
       toast({
         title: "Login failed",
