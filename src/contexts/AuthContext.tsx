@@ -4,11 +4,14 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 interface User {
   id: string;
   pseudonym: string;
+  isAdmin?: boolean;
+  email?: string;
 }
 
 interface AuthContextType {
   user: User | null;
-  login: (pseudonym: string, password: string) => Promise<void>;
+  login: (email: string, password: string) => Promise<void>;
+  adminLogin: (email: string, password: string) => Promise<void>;
   register: (pseudonym: string, password: string) => Promise<void>;
   logout: () => void;
   isAuthenticated: boolean;
@@ -51,6 +54,26 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setIsAuthenticated(true);
     localStorage.setItem('user', JSON.stringify(newUser));
   };
+  
+  // Admin login function
+  const adminLogin = async (email: string, password: string) => {
+    // Mock admin login - will be replaced with real authentication
+    if (email === 'admin@safespeak.com' && password === 'admin123') {
+      const adminUser = { 
+        id: 'admin-id', 
+        pseudonym: 'Admin', 
+        isAdmin: true,
+        email: email 
+      };
+      setUser(adminUser);
+      setIsAuthenticated(true);
+      setIsAdmin(true);
+      localStorage.setItem('user', JSON.stringify(adminUser));
+      return;
+    }
+    
+    throw new Error('Invalid admin credentials');
+  };
 
   // Register function
   const register = async (pseudonym: string, password: string) => {
@@ -70,7 +93,15 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   return (
-    <AuthContext.Provider value={{ user, login, register, logout, isAuthenticated, isAdmin }}>
+    <AuthContext.Provider value={{ 
+      user, 
+      login, 
+      adminLogin,
+      register, 
+      logout, 
+      isAuthenticated, 
+      isAdmin 
+    }}>
       {children}
     </AuthContext.Provider>
   );

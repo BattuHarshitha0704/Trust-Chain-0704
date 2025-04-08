@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -21,10 +21,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { MessageSquare, Loader2, CheckCircle } from "lucide-react";
+import { MessageSquare, Loader2, CheckCircle, AlertCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { motion } from "framer-motion";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 const formSchema = z.object({
   feedbackType: z.string().min(1, { message: "Please select a feedback type" }),
@@ -32,14 +33,78 @@ const formSchema = z.object({
   message: z.string().min(10, { message: "Message must be at least 10 characters" }).max(500, {
     message: "Message must not be longer than 500 characters",
   }),
+  reportId: z.string().optional(),
   email: z.string().email({ message: "Invalid email address" }).optional().or(z.literal("")),
 });
 
 type FeedbackFormValues = z.infer<typeof formSchema>;
 
+// Simple function to detect feedback type
+// In a real application, this would be done by an AI/NLP model
+const detectFeedbackType = (message: string): {
+  type: 'investigation' | 'admin' | 'resolution' | 'other',
+  confidence: number,
+  requiresReportId: boolean
+} => {
+  message = message.toLowerCase();
+  
+  // Keywords that indicate case-related feedback
+  const caseKeywords = [
+    'investigation', 'investigator', 'case', 'officer', 'report', 
+    'status', 'follow-up', 'resolution', 'solved', 'response',
+    'handled', 'admin', 'police', 'evidence', 'process'
+  ];
+  
+  // Keywords that indicate app-related feedback
+  const appKeywords = [
+    'app', 'interface', 'website', 'page', 'button', 'slow', 
+    'feature', 'difficult', 'confusing', 'ui', 'design',
+    'navigation', 'usability', 'menu', 'color', 'layout'
+  ];
+  
+  let caseKeywordCount = 0;
+  let appKeywordCount = 0;
+  
+  caseKeywords.forEach(keyword => {
+    if (message.includes(keyword)) {
+      caseKeywordCount++;
+    }
+  });
+  
+  appKeywords.forEach(keyword => {
+    if (message.includes(keyword)) {
+      appKeywordCount++;
+    }
+  });
+  
+  if (caseKeywordCount > appKeywordCount) {
+    // Determine the specific type of case-related feedback
+    if (message.includes('investigation') || message.includes('investigator') || message.includes('progress')) {
+      return { type: 'investigation', confidence: 0.85, requiresReportId: true };
+    } else if (message.includes('admin') || message.includes('officer') || message.includes('staff')) {
+      return { type: 'admin', confidence: 0.8, requiresReportId: true };
+    } else {
+      return { type: 'resolution', confidence: 0.75, requiresReportId: true };
+    }
+  } else if (appKeywordCount > 0) {
+    return { type: 'other', confidence: 0.9, requiresReportId: false };
+  }
+  
+  // Default to resolution if we can't determine
+  return { type: 'resolution', confidence: 0.6, requiresReportId: true };
+};
+
 const FeedbackForm = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [detectedFeedbackType, setDetectedFeedbackType] = useState<null | {
+    type: 'investigation' | 'admin' | 'resolution' | 'other',
+    confidence: number,
+    requiresReportId: boolean
+  }>(null);
+  const [message, setMessage] = useState('');
+  const [showReportIdWarning, setShowReportIdWarning] = useState(false);
+  const [showAppFeedbackWarning, setShowAppFeedbackWarning] = useState(false);
   const { toast } = useToast();
   
   const form = useForm<FeedbackFormValues>({
@@ -48,11 +113,62 @@ const FeedbackForm = () => {
       feedbackType: "",
       rating: "",
       message: "",
+      reportId: "",
       email: "",
     },
   });
   
+  // Update message and trigger analysis when the message field changes
+  useEffect(() => {
+    const messageValue = form.watch('message');
+    setMessage(messageValue);
+    
+    // Don't analyze until a reasonable message length
+    if (messageValue.length > 15) {
+      const detected = detectFeedbackType(messageValue);
+      setDetectedFeedbackType(detected);
+      
+      // Show app feedback warning if needed
+      setShowAppFeedbackWarning(detected.type === 'other');
+      
+      // Update the feedbackType field
+      form.setValue('feedbackType', detected.type);
+    } else {
+      setDetectedFeedbackType(null);
+      setShowAppFeedbackWarning(false);
+    }
+  }, [form.watch('message')]);
+  
+  // Check if report ID is needed but not provided
+  useEffect(() => {
+    const reportId = form.watch('reportId');
+    if (detectedFeedbackType?.requiresReportId && !reportId && message.length > 15) {
+      setShowReportIdWarning(true);
+    } else {
+      setShowReportIdWarning(false);
+    }
+  }, [form.watch('reportId'), detectedFeedbackType]);
+  
   const onSubmit = async (values: FeedbackFormValues) => {
+    // Validate if we need a report ID for case-related feedback
+    if (detectedFeedbackType?.requiresReportId && !values.reportId) {
+      form.setError('reportId', {
+        type: 'manual',
+        message: 'Report ID is required for case-related feedback.'
+      });
+      return;
+    }
+    
+    // Don't allow submission for app-related feedback
+    if (detectedFeedbackType?.type === 'other') {
+      toast({
+        title: "Feedback Not Accepted",
+        description: "App-related feedback should be submitted via the Help page instead.",
+        variant: "destructive",
+      });
+      return;
+    }
+    
     setIsSubmitting(true);
     
     // Simulate API call
@@ -99,24 +215,43 @@ const FeedbackForm = () => {
     <div className="glass-card rounded-xl p-6 md:p-8">
       <Form {...form}>
         <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+          {showAppFeedbackWarning && (
+            <Alert variant="destructive" className="mb-4">
+              <AlertCircle className="h-4 w-4" />
+              <AlertDescription>
+                Feedback is only accepted for case-related experiences. For app suggestions, please contact us via the Help page.
+              </AlertDescription>
+            </Alert>
+          )}
+          
+          {detectedFeedbackType && (
+            <div className="bg-safespeak-dark-accent/50 p-3 rounded-lg text-sm">
+              <p className="font-medium mb-1">Detected Feedback Type: {detectedFeedbackType.type.charAt(0).toUpperCase() + detectedFeedbackType.type.slice(1)}</p>
+              <p className="text-white/70">
+                {detectedFeedbackType.type !== 'other' 
+                  ? 'This appears to be feedback about a case or investigation.'
+                  : 'This appears to be feedback about the app or interface.'}
+              </p>
+            </div>
+          )}
+          
           <FormField
             control={form.control}
             name="feedbackType"
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Feedback Type</FormLabel>
-                <Select onValueChange={field.onChange} defaultValue={field.value}>
+                <Select onValueChange={field.onChange} value={field.value}>
                   <FormControl>
                     <SelectTrigger>
                       <SelectValue placeholder="Select feedback type" />
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    <SelectItem value="general">General Feedback</SelectItem>
-                    <SelectItem value="bug">Report a Bug</SelectItem>
-                    <SelectItem value="feature">Feature Request</SelectItem>
-                    <SelectItem value="usability">Usability Feedback</SelectItem>
-                    <SelectItem value="other">Other</SelectItem>
+                    <SelectItem value="investigation">Investigation Quality</SelectItem>
+                    <SelectItem value="admin">Admin Behavior</SelectItem>
+                    <SelectItem value="resolution">Case Resolution</SelectItem>
+                    <SelectItem value="other">Other (App-related)</SelectItem>
                   </SelectContent>
                 </Select>
                 <FormMessage />
@@ -236,7 +371,7 @@ const FeedbackForm = () => {
                 <FormLabel>Your Feedback</FormLabel>
                 <FormControl>
                   <Textarea 
-                    placeholder="Please share your thoughts, suggestions, or report any issues..." 
+                    placeholder="Please share your thoughts about the investigation, admin behavior, or case resolution..." 
                     className="min-h-[150px]" 
                     {...field} 
                   />
@@ -247,6 +382,33 @@ const FeedbackForm = () => {
                     {field.value.length}/500
                   </div>
                 </div>
+              </FormItem>
+            )}
+          />
+          
+          <FormField
+            control={form.control}
+            name="reportId"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel className="flex items-center gap-1">
+                  Report ID
+                  {detectedFeedbackType?.requiresReportId && (
+                    <span className="text-red-500">*</span>
+                  )}
+                </FormLabel>
+                <FormControl>
+                  <Input 
+                    placeholder="e.g., RPT-ABC12345" 
+                    {...field} 
+                  />
+                </FormControl>
+                <FormMessage />
+                {showReportIdWarning && (
+                  <p className="text-amber-500 text-xs mt-1">
+                    Since your feedback is about a specific case, please provide the Report ID.
+                  </p>
+                )}
               </FormItem>
             )}
           />
@@ -274,7 +436,7 @@ const FeedbackForm = () => {
           <Button 
             type="submit" 
             className="w-full"
-            disabled={isSubmitting}
+            disabled={isSubmitting || showAppFeedbackWarning}
           >
             {isSubmitting ? (
               <>
