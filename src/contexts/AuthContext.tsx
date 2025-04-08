@@ -6,12 +6,15 @@ interface User {
   pseudonym: string;
   isAdmin?: boolean;
   email?: string;
+  fullName?: string;
 }
 
 interface AuthContextType {
   user: User | null;
   login: (email: string, password: string) => Promise<void>;
   adminLogin: (email: string, password: string) => Promise<void>;
+  googleAdminLogin: () => Promise<void>;
+  adminRegister: (fullName: string, email: string, password: string) => Promise<void>;
   register: (pseudonym: string, password: string) => Promise<void>;
   logout: () => void;
   isAuthenticated: boolean;
@@ -58,7 +61,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // Admin login function
   const adminLogin = async (email: string, password: string) => {
     // Mock admin login - will be replaced with real authentication
-    if (email === 'admin@safespeak.com' && password === 'admin123') {
+    if (email === 'admin@safespeak.com' && password === 'Admin123!') {
       const adminUser = { 
         id: 'admin-id', 
         pseudonym: 'Admin', 
@@ -73,6 +76,38 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
     
     throw new Error('Invalid admin credentials');
+  };
+
+  // Google admin login function
+  const googleAdminLogin = async () => {
+    // Mock Google login - will be replaced with real authentication
+    // In a real implementation, this would use Google OAuth
+    const adminUser = { 
+      id: 'google-admin-id', 
+      pseudonym: 'Google Admin', 
+      isAdmin: true,
+      email: 'google-admin@safespeak.com',
+    };
+    setUser(adminUser);
+    setIsAuthenticated(true);
+    setIsAdmin(true);
+    localStorage.setItem('user', JSON.stringify(adminUser));
+  };
+
+  // Admin registration function
+  const adminRegister = async (fullName: string, email: string, password: string) => {
+    // Mock admin registration - will be replaced with real authentication
+    const adminUser = { 
+      id: `admin-${Date.now()}`, 
+      pseudonym: fullName,
+      fullName: fullName, 
+      isAdmin: true,
+      email: email 
+    };
+    setUser(adminUser);
+    setIsAuthenticated(true);
+    setIsAdmin(true);
+    localStorage.setItem('user', JSON.stringify(adminUser));
   };
 
   // Register function
@@ -97,6 +132,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       user, 
       login, 
       adminLogin,
+      googleAdminLogin,
+      adminRegister,
       register, 
       logout, 
       isAuthenticated, 

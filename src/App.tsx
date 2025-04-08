@@ -11,6 +11,7 @@ import HomePage from "./pages/HomePage";
 import UserDashboard from "./pages/UserDashboard";
 import AdminDashboard from "./pages/AdminDashboard";
 import AdminLogin from "./pages/AdminLogin";
+import AdminRegister from "./pages/AdminRegister";
 import ReportCrime from "./pages/ReportCrime";
 import TrackReport from "./pages/TrackReport";
 import FeedbackPage from "./pages/FeedbackPage";
@@ -35,6 +36,7 @@ const App = () => (
             <Route path="/login" element={<Login />} />
             <Route path="/register" element={<Register />} />
             <Route path="/admin-login" element={<AdminLogin />} />
+            <Route path="/admin-register" element={<AdminRegister />} />
             
             {/* Protected User Routes */}
             <Route path="/dashboard" element={
