@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { 
   ShieldCheck, User, FileText, CheckCircle, AlertTriangle, 
-  Clock, MessageSquare, BarChart2, LogOut
+  Clock, MessageSquare, BarChart2, LogOut, ExclamationTriangle
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
@@ -14,6 +14,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import CaseManagement from '@/components/admin/CaseManagement';
 import FeedbackReview from '@/components/admin/FeedbackReview';
+import CriticalCases from '@/components/admin/CriticalCases';
 import {
   Tabs,
   TabsContent,
@@ -187,17 +188,25 @@ const AdminDashboard = () => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
           >
-            <Tabs defaultValue="cases">
+            <Tabs defaultValue="critical">
               <TabsList className="mb-6">
+                <TabsTrigger value="critical" className="flex items-center gap-1.5">
+                  <ExclamationTriangle className="h-4 w-4" />
+                  <span>Critical Cases</span>
+                </TabsTrigger>
                 <TabsTrigger value="cases" className="flex items-center gap-1.5">
                   <FileText className="h-4 w-4" />
                   <span>Case Management</span>
                 </TabsTrigger>
                 <TabsTrigger value="feedback" className="flex items-center gap-1.5">
                   <MessageSquare className="h-4 w-4" />
-                  <span>Feedback Review</span>
+                  <span>User Feedback</span>
                 </TabsTrigger>
               </TabsList>
+              
+              <TabsContent value="critical">
+                <CriticalCases />
+              </TabsContent>
               
               <TabsContent value="cases">
                 <CaseManagement />

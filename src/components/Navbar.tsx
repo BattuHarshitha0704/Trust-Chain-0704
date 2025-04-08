@@ -23,12 +23,17 @@ const Navbar = () => {
     navigate('/');
   };
 
-  const navItems = [
-    { label: 'Dashboard', icon: Home, path: '/dashboard' },
-    { label: 'Report Crime', icon: FilePenLine, path: '/report' },
-    { label: 'Track Report', icon: Clock, path: '/track' },
-    { label: 'Feedback', icon: MessageSquare, path: '/feedback' },
-  ];
+  // Different navigation items for admins and regular users
+  const navItems = user?.isAdmin 
+    ? [
+        { label: 'Dashboard', icon: Home, path: '/admin' }
+      ]
+    : [
+        { label: 'Dashboard', icon: Home, path: '/dashboard' },
+        { label: 'Report Crime', icon: FilePenLine, path: '/report' },
+        { label: 'Track Report', icon: Clock, path: '/track' },
+        { label: 'Feedback', icon: MessageSquare, path: '/feedback' },
+      ];
 
   return (
     <header className="fixed top-0 left-0 w-full z-50 bg-safespeak-dark/80 backdrop-blur-md border-b border-white/10">
@@ -39,7 +44,7 @@ const Navbar = () => {
           animate={{ opacity: 1 }}
           transition={{ duration: 0.5 }}
         >
-          <Link to={user ? "/dashboard" : "/"} className="flex items-center gap-2 text-white">
+          <Link to={user ? (user.isAdmin ? "/admin" : "/dashboard") : "/"} className="flex items-center gap-2 text-white">
             <Shield className="h-7 w-7 text-safespeak-blue" />
             <span className="text-xl font-bold">Safe<span className="text-safespeak-blue">Speak</span></span>
           </Link>
