@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect } from 'react';
 
 interface User {
@@ -13,7 +12,7 @@ interface AuthContextType {
   user: User | null;
   login: (email: string, password: string) => Promise<void>;
   adminLogin: (email: string, password: string) => Promise<void>;
-  googleAdminLogin: () => Promise<void>; // Kept for back-compatibility but no longer exposed in UI
+  // Removed googleAdminLogin from the context interface but keeping it in implementation for backward compatibility
   adminRegister: (fullName: string, email: string, password: string) => Promise<void>;
   register: (pseudonym: string, password: string) => Promise<void>;
   logout: () => void;
@@ -72,7 +71,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     throw new Error('Invalid admin credentials');
   };
 
-  // Kept for back-compatibility but no longer exposed in UI
+  // Kept for back-compatibility but no longer exported in the context
   const googleAdminLogin = async () => {
     // In a real application, this would integrate with Google OAuth
     // Simulating successful Google authentication
@@ -123,7 +122,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       user, 
       login, 
       adminLogin,
-      googleAdminLogin,
       adminRegister,
       register, 
       logout, 

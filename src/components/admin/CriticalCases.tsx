@@ -7,8 +7,21 @@ import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { useToast } from '@/hooks/use-toast';
 
+// Types
+interface CriticalCase {
+  id: string;
+  title: string;
+  description: string;
+  location: string;
+  timeElapsed: string;
+  status: 'urgent' | 'critical' | 'high';
+  crimeType: string;
+  aiScore: number;
+  aiReason: string;
+}
+
 // Mock data for critical cases
-const mockCriticalCases = [
+const mockCriticalCases: CriticalCase[] = [
   {
     id: 'RPT-A1B2C3',
     title: 'Armed Robbery at Downtown Store',
@@ -54,19 +67,6 @@ const mockCriticalCases = [
     aiReason: 'Targets vulnerable population, multiple victims, organized crime, financial impact on victims.'
   }
 ];
-
-// Types
-interface CriticalCase {
-  id: string;
-  title: string;
-  description: string;
-  location: string;
-  timeElapsed: string;
-  status: 'urgent' | 'critical' | 'high';
-  crimeType: string;
-  aiScore: number;
-  aiReason: string;
-}
 
 // Helper function to get the status badge
 const getStatusBadge = (status: CriticalCase['status']) => {

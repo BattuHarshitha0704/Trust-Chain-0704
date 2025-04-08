@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { 
   ShieldCheck, User, FileText, CheckCircle, AlertTriangle, 
-  Clock, MessageSquare, BarChart2, LogOut, ExclamationTriangle
+  Clock, MessageSquare, BarChart2, LogOut, AlertTriangle as ExclamationTriangle
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
