@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect } from 'react';
 
 interface User {
@@ -28,7 +27,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
 
-  // Check for existing session on load
   useEffect(() => {
     const savedUser = localStorage.getItem('user');
     if (savedUser) {
@@ -39,9 +37,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   }, []);
 
-  // Login function - in a real app this would connect to your backend
   const login = async (pseudonym: string, password: string) => {
-    // Mock login - will be replaced with real blockchain authentication
     if (pseudonym === 'admin' && password === 'admin') {
       const adminUser = { id: 'admin-id', pseudonym: 'admin', isAdmin: true };
       setUser(adminUser);
@@ -51,16 +47,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       return;
     }
     
-    // Regular user login
     const newUser = { id: `user-${Date.now()}`, pseudonym };
     setUser(newUser);
     setIsAuthenticated(true);
     localStorage.setItem('user', JSON.stringify(newUser));
   };
   
-  // Admin login function
   const adminLogin = async (email: string, password: string) => {
-    // Mock admin login - will be replaced with real authentication
     if (email === 'admin@safespeak.com' && password === 'Admin123!') {
       const adminUser = { 
         id: 'admin-id', 
@@ -78,10 +71,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     throw new Error('Invalid admin credentials');
   };
 
-  // Google admin login function
   const googleAdminLogin = async () => {
-    // Mock Google login - will be replaced with real authentication
-    // In a real implementation, this would use Google OAuth
     const adminUser = { 
       id: 'google-admin-id', 
       pseudonym: 'Google Admin', 
@@ -94,9 +84,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     localStorage.setItem('user', JSON.stringify(adminUser));
   };
 
-  // Admin registration function
   const adminRegister = async (fullName: string, email: string, password: string) => {
-    // Mock admin registration - will be replaced with real authentication
     const adminUser = { 
       id: `admin-${Date.now()}`, 
       pseudonym: fullName,
@@ -110,16 +98,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     localStorage.setItem('user', JSON.stringify(adminUser));
   };
 
-  // Register function
   const register = async (pseudonym: string, password: string) => {
-    // Mock registration - will be replaced with real blockchain authentication
     const newUser = { id: `user-${Date.now()}`, pseudonym };
     setUser(newUser);
     setIsAuthenticated(true);
     localStorage.setItem('user', JSON.stringify(newUser));
   };
 
-  // Logout function
   const logout = () => {
     setUser(null);
     setIsAuthenticated(false);
