@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -74,8 +73,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         pseudonym: userData.pseudonym,
         isAdmin: userData.is_admin,
         email: authUser.email,
-        // Use optional chaining to safely access the full_name property if it exists
-        fullName: userData.full_name || null
+        fullName: null
       };
 
       setUser(user);
