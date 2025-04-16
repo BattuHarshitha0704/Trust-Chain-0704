@@ -58,17 +58,16 @@ const AdminRegister = () => {
     setIsLoading(true);
     
     try {
-      // This would be implemented in AuthContext
-      // await adminRegister(values.fullName, values.email, values.password);
+      await adminRegister(values.fullName, values.email, values.password);
       toast({
-        title: "Registration not yet implemented",
-        description: "Please use the provided admin credentials for now.",
+        title: "Registration successful",
+        description: "Your admin account has been created",
       });
       navigate("/admin-login");
-    } catch (error) {
+    } catch (error: any) {
       toast({
         title: "Registration failed",
-        description: "Unable to create admin account. Please try again.",
+        description: error.message || "Unable to create admin account. Please try again.",
         variant: "destructive",
       });
     } finally {

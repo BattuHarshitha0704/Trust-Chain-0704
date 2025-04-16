@@ -33,18 +33,16 @@ const Login = () => {
     setIsLoading(true);
     
     try {
-      await login(pseudonym, password);
+      const email = `${pseudonym.toLowerCase()}@safespeak.anonymous`;
+      await login(email, password);
       toast({
         title: "Success",
         description: "You've been logged in successfully",
       });
       navigate('/dashboard');
     } catch (error) {
-      toast({
-        title: "Error",
-        description: "Failed to login. Please check your credentials.",
-        variant: "destructive"
-      });
+      // Error is already handled in login function
+      console.error(error);
     } finally {
       setIsLoading(false);
     }

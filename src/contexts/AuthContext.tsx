@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -19,6 +20,7 @@ interface AuthContextType {
   logout: () => Promise<void>;
   isAuthenticated: boolean;
   isAdmin: boolean;
+  loading: boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -27,6 +29,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [user, setUser] = useState<User | null>(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [loading, setLoading] = useState(true);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -34,6 +37,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session) {
         handleUserSession(session.user);
+      } else {
+        setLoading(false);
       }
     });
 
@@ -47,6 +52,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setUser(null);
         setIsAuthenticated(false);
         setIsAdmin(false);
+        setLoading(false);
       }
     });
 
@@ -68,11 +74,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         pseudonym: userData.pseudonym,
         isAdmin: userData.is_admin,
         email: authUser.email,
+        fullName: userData.full_name
       };
 
       setUser(user);
       setIsAuthenticated(true);
       setIsAdmin(userData.is_admin);
+      setLoading(false);
     } catch (error) {
       console.error('Error fetching user data:', error);
       toast({
@@ -80,6 +88,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         description: "Failed to load user data",
         variant: "destructive"
       });
+      setLoading(false);
     }
   };
 
@@ -151,6 +160,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           .from('users')
           .update({ is_admin: true, full_name: fullName })
           .eq('id', data.user.id);
+          
+        toast({
+          title: "Registration Successful",
+          description: "Admin account created successfully",
+        });
       }
     } catch (error: any) {
       toast({
@@ -183,6 +197,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           .from('users')
           .update({ pseudonym })
           .eq('id', data.user.id);
+          
+        toast({
+          title: "Registration Successful",
+          description: "Your anonymous profile has been created",
+        });
       }
     } catch (error: any) {
       toast({
@@ -220,7 +239,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       register,
       logout,
       isAuthenticated,
-      isAdmin
+      isAdmin,
+      loading
     }}>
       {children}
     </AuthContext.Provider>

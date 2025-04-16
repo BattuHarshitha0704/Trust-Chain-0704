@@ -21,14 +21,9 @@ import { motion } from "framer-motion";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 
-const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
-
 const formSchema = z.object({
   email: z.string().email({ message: "Please enter a valid email address" }),
-  password: z.string().regex(
-    passwordRegex, 
-    { message: "Password must contain at least 8 characters, including uppercase, lowercase, number and special character" }
-  ),
+  password: z.string().min(8, { message: "Password must be at least 8 characters" }),
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -58,11 +53,8 @@ const AdminLogin = () => {
       });
       navigate("/admin");
     } catch (error) {
-      toast({
-        title: "Login failed",
-        description: "Invalid credentials. Please try again.",
-        variant: "destructive",
-      });
+      // Error is already handled in adminLogin function
+      console.error(error);
     } finally {
       setIsLoading(false);
     }

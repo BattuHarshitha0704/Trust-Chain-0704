@@ -1,5 +1,4 @@
 
-import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import { Shield, Lock, User, Users } from 'lucide-react';
@@ -76,9 +75,14 @@ const HomePage = () => {
               <p className="text-white/70 mb-6">
                 Authorized personnel login to manage and investigate reported cases.
               </p>
-              <Button asChild className="w-full bg-safespeak-green hover:bg-safespeak-green/90">
-                <Link to="/admin">Admin Login</Link>
-              </Button>
+              <div className="flex flex-col w-full gap-3">
+                <Button asChild className="w-full bg-safespeak-green hover:bg-safespeak-green/90">
+                  <Link to="/admin-login">Admin Login</Link>
+                </Button>
+                <Button asChild variant="outline" className="w-full">
+                  <Link to="/admin-register">Register as Admin</Link>
+                </Button>
+              </div>
             </motion.div>
           </div>
           
