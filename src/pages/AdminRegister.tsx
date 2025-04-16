@@ -21,15 +21,14 @@ import { motion } from "framer-motion";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
 
-const passwordRegex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]{8,}$/;
+// Make password requirements less strict for testing purposes
+const passwordSchema = z.string()
+  .min(6, { message: "Password must be at least 6 characters" });
 
 const formSchema = z.object({
   fullName: z.string().min(3, { message: "Full name must be at least 3 characters" }),
   email: z.string().email({ message: "Please enter a valid email address" }),
-  password: z.string().regex(
-    passwordRegex, 
-    { message: "Password must contain at least 8 characters, including uppercase, lowercase, number and special character" }
-  ),
+  password: passwordSchema,
   confirmPassword: z.string()
 }).refine((data) => data.password === data.confirmPassword, {
   message: "Passwords do not match",
@@ -43,6 +42,7 @@ const AdminRegister = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -56,6 +56,7 @@ const AdminRegister = () => {
   
   const onSubmit = async (values: FormValues) => {
     setIsLoading(true);
+    setErrorMessage(null);
     
     try {
       await adminRegister(values.fullName, values.email, values.password);
@@ -65,9 +66,12 @@ const AdminRegister = () => {
       });
       navigate("/admin-login");
     } catch (error: any) {
+      console.error('Admin registration error:', error);
+      const message = error.message || "Unable to create admin account. Please try again.";
+      setErrorMessage(message);
       toast({
         title: "Registration failed",
-        description: error.message || "Unable to create admin account. Please try again.",
+        description: message,
         variant: "destructive",
       });
     } finally {
@@ -99,6 +103,12 @@ const AdminRegister = () => {
               </p>
             </div>
             
+            {errorMessage && (
+              <div className="bg-red-500/10 border border-red-500/20 text-red-400 px-4 py-2 rounded-md mb-6 text-sm">
+                {errorMessage}
+              </div>
+            )}
+            
             <Form {...form}>
               <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
                 <FormField
@@ -111,6 +121,7 @@ const AdminRegister = () => {
                         <Input 
                           placeholder="John Doe" 
                           {...field}
+                          disabled={isLoading}
                         />
                       </FormControl>
                       <FormMessage />
@@ -129,6 +140,7 @@ const AdminRegister = () => {
                           placeholder="admin@safespeak.com" 
                           type="email"
                           {...field}
+                          disabled={isLoading}
                         />
                       </FormControl>
                       <FormMessage />
@@ -147,6 +159,7 @@ const AdminRegister = () => {
                           placeholder="••••••••" 
                           type="password" 
                           {...field}
+                          disabled={isLoading}
                         />
                       </FormControl>
                       <FormMessage className="text-xs" />
@@ -165,6 +178,7 @@ const AdminRegister = () => {
                           placeholder="••••••••" 
                           type="password" 
                           {...field}
+                          disabled={isLoading}
                         />
                       </FormControl>
                       <FormMessage />

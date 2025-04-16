@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -73,7 +74,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         pseudonym: userData.pseudonym,
         isAdmin: userData.is_admin,
         email: authUser.email,
-        fullName: null
+        fullName: userData.full_name || null
       };
 
       setUser(user);
@@ -141,6 +142,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const adminRegister = async (fullName: string, email: string, password: string) => {
     try {
+      // First create the auth user
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
@@ -155,10 +157,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (error) throw error;
 
       if (data.user) {
-        await supabase
+        // Then update or insert into the public users table
+        const { error: userError } = await supabase
           .from('users')
-          .update({ is_admin: true, full_name: fullName })
-          .eq('id', data.user.id);
+          .upsert({ 
+            id: data.user.id, 
+            is_admin: true, 
+            pseudonym: email.split('@')[0],
+            full_name: fullName
+          });
+          
+        if (userError) throw userError;
           
         toast({
           title: "Registration Successful",
@@ -178,6 +187,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const register = async (pseudonym: string, password: string) => {
     try {
       const email = `${pseudonym.toLowerCase()}@safespeak.anonymous`;
+      
+      // First create the auth user
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
@@ -192,10 +203,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (error) throw error;
 
       if (data.user) {
-        await supabase
+        // Then update or insert into the public users table
+        const { error: userError } = await supabase
           .from('users')
-          .update({ pseudonym })
-          .eq('id', data.user.id);
+          .upsert({ 
+            id: data.user.id, 
+            pseudonym, 
+            is_admin: false
+          });
+          
+        if (userError) throw userError;
           
         toast({
           title: "Registration Successful",

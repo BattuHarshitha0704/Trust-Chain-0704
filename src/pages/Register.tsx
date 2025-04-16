@@ -6,7 +6,7 @@ import { UserPlus, Shield, Lock } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { useToast } from '@/components/ui/use-toast';
+import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '../contexts/AuthContext';
 import Footer from '@/components/Footer';
 
@@ -15,14 +15,17 @@ const Register = () => {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const { register } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
 
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
+    setErrorMessage(null);
     
     if (!pseudonym || !password || !confirmPassword) {
+      setErrorMessage("Please fill in all fields");
       toast({
         title: "Error",
         description: "Please fill in all fields",
@@ -32,9 +35,20 @@ const Register = () => {
     }
     
     if (password !== confirmPassword) {
+      setErrorMessage("Passwords do not match");
       toast({
         title: "Error",
         description: "Passwords do not match",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    if (password.length < 6) {
+      setErrorMessage("Password must be at least 6 characters long");
+      toast({
+        title: "Error",
+        description: "Password must be at least 6 characters long",
         variant: "destructive"
       });
       return;
@@ -49,10 +63,13 @@ const Register = () => {
         description: "Your anonymous profile has been created",
       });
       navigate('/dashboard');
-    } catch (error) {
+    } catch (error: any) {
+      console.error('Registration error:', error);
+      const message = error.message || "Failed to create your profile";
+      setErrorMessage(message);
       toast({
         title: "Error",
-        description: "Failed to create your profile",
+        description: message,
         variant: "destructive"
       });
     } finally {
@@ -81,6 +98,12 @@ const Register = () => {
           
           <h1 className="text-2xl font-bold text-center mb-6">Create Anonymous Profile</h1>
           
+          {errorMessage && (
+            <div className="bg-red-500/10 border border-red-500/20 text-red-400 px-4 py-2 rounded-md mb-4 text-sm">
+              {errorMessage}
+            </div>
+          )}
+          
           <form onSubmit={handleRegister} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="pseudonym">Choose a Pseudonym</Label>
@@ -90,6 +113,7 @@ const Register = () => {
                 value={pseudonym}
                 onChange={(e) => setPseudonym(e.target.value)}
                 className="bg-safespeak-dark-accent border-white/10"
+                disabled={isLoading}
               />
             </div>
             
@@ -102,7 +126,9 @@ const Register = () => {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 className="bg-safespeak-dark-accent border-white/10"
+                disabled={isLoading}
               />
+              <p className="text-xs text-white/50">Must be at least 6 characters long</p>
             </div>
             
             <div className="space-y-2">
@@ -114,6 +140,7 @@ const Register = () => {
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 className="bg-safespeak-dark-accent border-white/10"
+                disabled={isLoading}
               />
             </div>
             
