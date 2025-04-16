@@ -74,7 +74,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         pseudonym: userData.pseudonym,
         isAdmin: userData.is_admin,
         email: authUser.email,
-        fullName: userData.full_name || null
+        // Fix: Don't try to access full_name as it doesn't exist in the database schema
+        fullName: null
       };
 
       setUser(user);
