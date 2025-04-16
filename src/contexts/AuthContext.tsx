@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -33,7 +32,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const { toast } = useToast();
 
   useEffect(() => {
-    // Check for existing session
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session) {
         handleUserSession(session.user);
@@ -42,7 +40,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
     });
 
-    // Listen for auth changes
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
@@ -74,7 +71,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         pseudonym: userData.pseudonym,
         isAdmin: userData.is_admin,
         email: authUser.email,
-        // Fix: Don't try to access full_name as it doesn't exist in the database schema
         fullName: null
       };
 
@@ -143,7 +139,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const adminRegister = async (fullName: string, email: string, password: string) => {
     try {
-      // First create the auth user
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
@@ -151,28 +146,27 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           data: {
             full_name: fullName,
             is_admin: true,
-          }
+          },
+          emailRedirectTo: window.location.origin
         }
       });
       
       if (error) throw error;
 
       if (data.user) {
-        // Then update or insert into the public users table
         const { error: userError } = await supabase
           .from('users')
           .upsert({ 
             id: data.user.id, 
             is_admin: true, 
             pseudonym: email.split('@')[0],
-            full_name: fullName
           });
           
         if (userError) throw userError;
           
         toast({
           title: "Registration Successful",
-          description: "Admin account created successfully",
+          description: "Admin account created. Please check your email for verification.",
         });
       }
     } catch (error: any) {
@@ -189,7 +183,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       const email = `${pseudonym.toLowerCase()}@safespeak.anonymous`;
       
-      // First create the auth user
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
@@ -197,14 +190,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           data: {
             pseudonym,
             is_admin: false,
-          }
+          },
+          emailRedirectTo: window.location.origin
         }
       });
       
       if (error) throw error;
 
       if (data.user) {
-        // Then update or insert into the public users table
         const { error: userError } = await supabase
           .from('users')
           .upsert({ 
@@ -217,7 +210,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           
         toast({
           title: "Registration Successful",
-          description: "Your anonymous profile has been created",
+          description: "Your anonymous profile has been created. For testing purposes, you can now login directly.",
         });
       }
     } catch (error: any) {
