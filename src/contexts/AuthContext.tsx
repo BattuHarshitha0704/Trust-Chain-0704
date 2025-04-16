@@ -74,7 +74,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         pseudonym: userData.pseudonym,
         isAdmin: userData.is_admin,
         email: authUser.email,
-        fullName: userData.full_name
+        // Use optional chaining to safely access the full_name property if it exists
+        fullName: userData.full_name || null
       };
 
       setUser(user);
