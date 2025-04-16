@@ -1,4 +1,7 @@
+
 import React, { createContext, useContext, useState, useEffect } from 'react';
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from '@/hooks/use-toast';
 
 interface User {
   id: string;
@@ -12,10 +15,9 @@ interface AuthContextType {
   user: User | null;
   login: (email: string, password: string) => Promise<void>;
   adminLogin: (email: string, password: string) => Promise<void>;
-  // Removed googleAdminLogin from the context interface but keeping it in implementation for backward compatibility
   adminRegister: (fullName: string, email: string, password: string) => Promise<void>;
   register: (pseudonym: string, password: string) => Promise<void>;
-  logout: () => void;
+  logout: () => Promise<void>;
   isAuthenticated: boolean;
   isAdmin: boolean;
 }
@@ -26,107 +28,201 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [user, setUser] = useState<User | null>(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
+  const { toast } = useToast();
 
   useEffect(() => {
-    const savedUser = localStorage.getItem('user');
-    if (savedUser) {
-      const parsedUser = JSON.parse(savedUser);
-      setUser(parsedUser);
-      setIsAuthenticated(true);
-      setIsAdmin(parsedUser.isAdmin || false);
-    }
+    // Check for existing session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session) {
+        handleUserSession(session.user);
+      }
+    });
+
+    // Listen for auth changes
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (session) {
+        handleUserSession(session.user);
+      } else {
+        setUser(null);
+        setIsAuthenticated(false);
+        setIsAdmin(false);
+      }
+    });
+
+    return () => subscription.unsubscribe();
   }, []);
 
-  const login = async (pseudonym: string, password: string) => {
-    if (pseudonym === 'admin' && password === 'admin') {
-      const adminUser = { id: 'admin-id', pseudonym: 'admin', isAdmin: true };
-      setUser(adminUser);
-      setIsAuthenticated(true);
-      setIsAdmin(true);
-      localStorage.setItem('user', JSON.stringify(adminUser));
-      return;
-    }
-    
-    const newUser = { id: `user-${Date.now()}`, pseudonym };
-    setUser(newUser);
-    setIsAuthenticated(true);
-    localStorage.setItem('user', JSON.stringify(newUser));
-  };
-  
-  const adminLogin = async (email: string, password: string) => {
-    if (email === 'admin@safespeak.com' && password === 'Admin123!') {
-      const adminUser = { 
-        id: 'admin-id', 
-        pseudonym: 'Admin', 
-        isAdmin: true,
-        email: email 
+  const handleUserSession = async (authUser: any) => {
+    try {
+      const { data: userData, error } = await supabase
+        .from('users')
+        .select('*')
+        .eq('id', authUser.id)
+        .single();
+
+      if (error) throw error;
+
+      const user = {
+        id: userData.id,
+        pseudonym: userData.pseudonym,
+        isAdmin: userData.is_admin,
+        email: authUser.email,
+        fullName: userData.full_name
       };
-      setUser(adminUser);
+
+      setUser(user);
       setIsAuthenticated(true);
-      setIsAdmin(true);
-      localStorage.setItem('user', JSON.stringify(adminUser));
-      return;
+      setIsAdmin(userData.is_admin);
+    } catch (error) {
+      console.error('Error fetching user data:', error);
+      toast({
+        title: "Error",
+        description: "Failed to load user data",
+        variant: "destructive"
+      });
     }
-    
-    throw new Error('Invalid admin credentials');
   };
 
-  // Kept for back-compatibility but no longer exported in the context
-  const googleAdminLogin = async () => {
-    // In a real application, this would integrate with Google OAuth
-    // Simulating successful Google authentication
-    const googleUser = { 
-      id: `google-admin-${Date.now()}`, 
-      pseudonym: 'Google Admin',
-      fullName: 'Google User', 
-      isAdmin: true,
-      email: 'google-admin@gmail.com' 
-    };
-    
-    setUser(googleUser);
-    setIsAuthenticated(true);
-    setIsAdmin(true);
-    localStorage.setItem('user', JSON.stringify(googleUser));
+  const login = async (email: string, password: string) => {
+    try {
+      const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+      if (error) throw error;
+    } catch (error: any) {
+      toast({
+        title: "Login Failed",
+        description: error.message,
+        variant: "destructive"
+      });
+      throw error;
+    }
+  };
+
+  const adminLogin = async (email: string, password: string) => {
+    try {
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+      
+      if (error) throw error;
+
+      const { data: userData, error: userError } = await supabase
+        .from('users')
+        .select('is_admin')
+        .eq('id', data.user.id)
+        .single();
+
+      if (userError) throw userError;
+
+      if (!userData.is_admin) {
+        await supabase.auth.signOut();
+        throw new Error('Unauthorized: Not an admin account');
+      }
+    } catch (error: any) {
+      toast({
+        title: "Admin Login Failed",
+        description: error.message,
+        variant: "destructive"
+      });
+      throw error;
+    }
   };
 
   const adminRegister = async (fullName: string, email: string, password: string) => {
-    const adminUser = { 
-      id: `admin-${Date.now()}`, 
-      pseudonym: fullName,
-      fullName: fullName, 
-      isAdmin: true,
-      email: email 
-    };
-    setUser(adminUser);
-    setIsAuthenticated(true);
-    setIsAdmin(true);
-    localStorage.setItem('user', JSON.stringify(adminUser));
+    try {
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            full_name: fullName,
+            is_admin: true,
+          }
+        }
+      });
+      
+      if (error) throw error;
+
+      if (data.user) {
+        await supabase
+          .from('users')
+          .update({ is_admin: true, full_name: fullName })
+          .eq('id', data.user.id);
+      }
+    } catch (error: any) {
+      toast({
+        title: "Admin Registration Failed",
+        description: error.message,
+        variant: "destructive"
+      });
+      throw error;
+    }
   };
 
   const register = async (pseudonym: string, password: string) => {
-    const newUser = { id: `user-${Date.now()}`, pseudonym };
-    setUser(newUser);
-    setIsAuthenticated(true);
-    localStorage.setItem('user', JSON.stringify(newUser));
+    try {
+      const email = `${pseudonym.toLowerCase()}@safespeak.anonymous`;
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            pseudonym,
+            is_admin: false,
+          }
+        }
+      });
+      
+      if (error) throw error;
+
+      if (data.user) {
+        await supabase
+          .from('users')
+          .update({ pseudonym })
+          .eq('id', data.user.id);
+      }
+    } catch (error: any) {
+      toast({
+        title: "Registration Failed",
+        description: error.message,
+        variant: "destructive"
+      });
+      throw error;
+    }
   };
 
-  const logout = () => {
-    setUser(null);
-    setIsAuthenticated(false);
-    setIsAdmin(false);
-    localStorage.removeItem('user');
+  const logout = async () => {
+    try {
+      const { error } = await supabase.auth.signOut();
+      if (error) throw error;
+      
+      setUser(null);
+      setIsAuthenticated(false);
+      setIsAdmin(false);
+    } catch (error: any) {
+      toast({
+        title: "Logout Failed",
+        description: error.message,
+        variant: "destructive"
+      });
+    }
   };
 
   return (
-    <AuthContext.Provider value={{ 
-      user, 
-      login, 
+    <AuthContext.Provider value={{
+      user,
+      login,
       adminLogin,
       adminRegister,
-      register, 
-      logout, 
-      isAuthenticated, 
-      isAdmin 
+      register,
+      logout,
+      isAuthenticated,
+      isAdmin
     }}>
       {children}
     </AuthContext.Provider>
