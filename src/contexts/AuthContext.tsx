@@ -92,11 +92,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const login = async (email: string, password: string) => {
     try {
-      const { error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
+      // Disabled login functionality
+      toast({
+        title: "Login Disabled",
+        description: "User login functionality is currently disabled.",
+        variant: "destructive"
       });
-      if (error) throw error;
+      throw new Error("Login functionality is currently disabled");
     } catch (error: any) {
       toast({
         title: "Login Failed",
@@ -109,25 +111,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const adminLogin = async (email: string, password: string) => {
     try {
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email,
-        password,
+      // Disabled admin login functionality
+      toast({
+        title: "Admin Login Disabled",
+        description: "Admin login functionality is currently disabled.",
+        variant: "destructive"
       });
-      
-      if (error) throw error;
-
-      const { data: userData, error: userError } = await supabase
-        .from('users')
-        .select('is_admin')
-        .eq('id', data.user.id)
-        .single();
-
-      if (userError) throw userError;
-
-      if (!userData.is_admin) {
-        await supabase.auth.signOut();
-        throw new Error('Unauthorized: Not an admin account');
-      }
+      throw new Error("Admin login functionality is currently disabled");
     } catch (error: any) {
       toast({
         title: "Admin Login Failed",
@@ -167,19 +157,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         throw userError;
       }
       
-      // Auto sign-in after registration
-      const { error: signInError } = await supabase.auth.signInWithPassword({
-        email,
-        password
-      });
-      
-      if (signInError) {
-        throw signInError;
-      }
-        
+      // Auto sign-in after registration disabled for admin
       toast({
         title: "Registration Successful",
-        description: "Admin account created successfully. You are now logged in.",
+        description: "Admin account created successfully, but login is currently disabled.",
       });
     } catch (error: any) {
       toast({
@@ -222,19 +203,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         throw userError;
       }
       
-      // Auto sign-in after registration
-      const { error: signInError } = await supabase.auth.signInWithPassword({
-        email,
-        password
-      });
-      
-      if (signInError) {
-        throw signInError;
-      }
-      
+      // Auto sign-in after registration disabled
       toast({
         title: "Registration Successful",
-        description: "Your anonymous profile has been created. You are now logged in.",
+        description: "Your anonymous profile has been created, but login is currently disabled.",
       });
     } catch (error: any) {
       toast({

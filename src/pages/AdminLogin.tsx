@@ -15,7 +15,7 @@ import {
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import { Shield, LogIn, Loader2 } from "lucide-react";
+import { Shield, LogIn, Loader2, AlertCircle } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { motion } from "framer-motion";
 import Navbar from "@/components/Navbar";
@@ -33,7 +33,7 @@ const AdminLogin = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>("Admin login functionality is currently disabled");
   
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -44,19 +44,12 @@ const AdminLogin = () => {
   });
   
   const onSubmit = async (values: FormValues) => {
-    setIsLoading(true);
-    setErrorMessage(null);
-    
-    try {
-      await adminLogin(values.email, values.password);
-      navigate("/admin");
-    } catch (error: any) {
-      const message = error.message || "Login failed. Please check your credentials.";
-      setErrorMessage(message);
-      console.error(error);
-    } finally {
-      setIsLoading(false);
-    }
+    setErrorMessage("Admin login functionality is currently disabled");
+    toast({
+      title: "Admin Login Disabled",
+      description: "Admin login functionality is currently disabled.",
+      variant: "destructive"
+    });
   };
   
   return (
@@ -84,7 +77,8 @@ const AdminLogin = () => {
             </div>
             
             {errorMessage && (
-              <div className="bg-red-500/10 border border-red-500/20 text-red-400 px-4 py-2 rounded-md mb-6 text-sm">
+              <div className="bg-red-500/10 border border-red-500/20 text-red-400 px-4 py-2 rounded-md mb-6 text-sm flex items-center gap-2">
+                <AlertCircle className="h-4 w-4" />
                 {errorMessage}
               </div>
             )}
@@ -102,7 +96,7 @@ const AdminLogin = () => {
                           placeholder="admin@safespeak.com" 
                           {...field}
                           type="email"
-                          disabled={isLoading}
+                          disabled={true}
                         />
                       </FormControl>
                       <FormMessage />
@@ -121,7 +115,7 @@ const AdminLogin = () => {
                           placeholder="••••••••" 
                           type="password" 
                           {...field}
-                          disabled={isLoading}
+                          disabled={true}
                         />
                       </FormControl>
                       <FormMessage className="text-xs" />
@@ -131,20 +125,11 @@ const AdminLogin = () => {
                 
                 <Button 
                   type="submit" 
-                  className="w-full"
-                  disabled={isLoading}
+                  className="w-full bg-gray-500 hover:bg-gray-600 cursor-not-allowed"
+                  disabled={true}
                 >
-                  {isLoading ? (
-                    <>
-                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Logging in...
-                    </>
-                  ) : (
-                    <>
-                      <LogIn className="mr-2 h-4 w-4" />
-                      Login
-                    </>
-                  )}
+                  <LogIn className="mr-2 h-4 w-4" />
+                  Login (Disabled)
                 </Button>
               </form>
             </Form>

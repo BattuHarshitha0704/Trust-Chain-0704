@@ -2,7 +2,7 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Lock, Shield } from 'lucide-react';
+import { Lock, Shield, AlertCircle } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -14,34 +14,19 @@ const Login = () => {
   const [pseudonym, setPseudonym] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [errorMessage, setErrorMessage] = useState<string | null>("Login functionality is currently disabled");
   const { login } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    setErrorMessage(null);
-    
-    if (!pseudonym || !password) {
-      setErrorMessage("Please fill in all fields");
-      return;
-    }
-    
-    setIsLoading(true);
-    
-    try {
-      // Convert pseudonym to email format for authentication
-      const email = `${pseudonym.toLowerCase()}@safespeak.anonymous`;
-      await login(email, password);
-      navigate('/dashboard');
-    } catch (error: any) {
-      const message = error.message || "Login failed. Please check your credentials.";
-      setErrorMessage(message);
-      console.error(error);
-    } finally {
-      setIsLoading(false);
-    }
+    setErrorMessage("Login functionality is currently disabled");
+    toast({
+      title: "Login Disabled",
+      description: "User login functionality is currently disabled.",
+      variant: "destructive"
+    });
   };
 
   return (
@@ -66,7 +51,8 @@ const Login = () => {
           <h1 className="text-2xl font-bold text-center mb-6">Anonymous Login</h1>
           
           {errorMessage && (
-            <div className="bg-red-500/10 border border-red-500/20 text-red-400 px-4 py-2 rounded-md mb-4 text-sm">
+            <div className="bg-red-500/10 border border-red-500/20 text-red-400 px-4 py-2 rounded-md mb-4 text-sm flex items-center gap-2">
+              <AlertCircle className="h-4 w-4" />
               {errorMessage}
             </div>
           )}
@@ -80,7 +66,7 @@ const Login = () => {
                 value={pseudonym}
                 onChange={(e) => setPseudonym(e.target.value)}
                 className="bg-safespeak-dark-accent border-white/10"
-                disabled={isLoading}
+                disabled={true}
               />
             </div>
             
@@ -93,24 +79,18 @@ const Login = () => {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 className="bg-safespeak-dark-accent border-white/10"
-                disabled={isLoading}
+                disabled={true}
               />
             </div>
             
             <Button 
               type="submit" 
-              className="w-full bg-safespeak-blue hover:bg-safespeak-blue/90" 
-              disabled={isLoading}
+              className="w-full bg-gray-500 hover:bg-gray-600 cursor-not-allowed" 
+              disabled={true}
             >
-              {isLoading ? (
-                <span className="flex items-center gap-2">
-                  <span className="animate-spin">●</span> Logging in...
-                </span>
-              ) : (
-                <span className="flex items-center gap-2">
-                  <Lock className="h-4 w-4" /> Login
-                </span>
-              )}
+              <span className="flex items-center gap-2">
+                <Lock className="h-4 w-4" /> Login (Disabled)
+              </span>
             </Button>
           </form>
           
