@@ -33,7 +33,7 @@ const AdminLogin = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
-  const [errorMessage, setErrorMessage] = useState<string | null>("Admin login functionality is currently disabled");
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -44,12 +44,20 @@ const AdminLogin = () => {
   });
   
   const onSubmit = async (values: FormValues) => {
-    setErrorMessage("Admin login functionality is currently disabled");
-    toast({
-      title: "Admin Login Disabled",
-      description: "Admin login functionality is currently disabled.",
-      variant: "destructive"
-    });
+    setIsLoading(true);
+    setErrorMessage(null);
+    
+    try {
+      await adminLogin(values.email, values.password);
+      navigate('/admin');
+    } catch (error: any) {
+      setErrorMessage(error.message || 'An error occurred during login');
+      form.setError("root", {
+        message: error.message,
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
   
   return (
@@ -96,9 +104,9 @@ const AdminLogin = () => {
                           placeholder="admin@safespeak.com" 
                           {...field}
                           type="email"
-                          disabled={true}
                         />
                       </FormControl>
+                      <p className="text-xs text-muted-foreground mt-1">Static email: "admin@safespeak.com"</p>
                       <FormMessage />
                     </FormItem>
                   )}
@@ -115,9 +123,9 @@ const AdminLogin = () => {
                           placeholder="••••••••" 
                           type="password" 
                           {...field}
-                          disabled={true}
                         />
                       </FormControl>
+                      <p className="text-xs text-muted-foreground mt-1">Static password: "admin123"</p>
                       <FormMessage className="text-xs" />
                     </FormItem>
                   )}
@@ -125,11 +133,20 @@ const AdminLogin = () => {
                 
                 <Button 
                   type="submit" 
-                  className="w-full bg-gray-500 hover:bg-gray-600 cursor-not-allowed"
-                  disabled={true}
+                  className="w-full"
+                  disabled={isLoading}
                 >
-                  <LogIn className="mr-2 h-4 w-4" />
-                  Login (Disabled)
+                  {isLoading ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Logging in...
+                    </>
+                  ) : (
+                    <>
+                      <LogIn className="mr-2 h-4 w-4" />
+                      Login
+                    </>
+                  )}
                 </Button>
               </form>
             </Form>

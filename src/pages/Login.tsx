@@ -14,19 +14,24 @@ const Login = () => {
   const [pseudonym, setPseudonym] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [errorMessage, setErrorMessage] = useState<string | null>("Login functionality is currently disabled");
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const { login } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    setErrorMessage("Login functionality is currently disabled");
-    toast({
-      title: "Login Disabled",
-      description: "User login functionality is currently disabled.",
-      variant: "destructive"
-    });
+    setIsLoading(true);
+    setErrorMessage(null);
+
+    try {
+      await login(pseudonym, password);
+      navigate('/dashboard');
+    } catch (error: any) {
+      setErrorMessage(error.message || 'An error occurred during login');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -66,8 +71,8 @@ const Login = () => {
                 value={pseudonym}
                 onChange={(e) => setPseudonym(e.target.value)}
                 className="bg-safespeak-dark-accent border-white/10"
-                disabled={true}
               />
+              <p className="text-xs text-muted-foreground mt-1">Static pseudonym: "anonymous"</p>
             </div>
             
             <div className="space-y-2">
@@ -79,18 +84,24 @@ const Login = () => {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 className="bg-safespeak-dark-accent border-white/10"
-                disabled={true}
               />
+              <p className="text-xs text-muted-foreground mt-1">Static password: "password"</p>
             </div>
             
             <Button 
               type="submit" 
-              className="w-full bg-gray-500 hover:bg-gray-600 cursor-not-allowed" 
-              disabled={true}
+              className="w-full" 
+              disabled={isLoading}
             >
-              <span className="flex items-center gap-2">
-                <Lock className="h-4 w-4" /> Login (Disabled)
-              </span>
+              {isLoading ? (
+                <span className="flex items-center gap-2">
+                  <Lock className="h-4 w-4 animate-spin" /> Logging in...
+                </span>
+              ) : (
+                <span className="flex items-center gap-2">
+                  <Lock className="h-4 w-4" /> Login
+                </span>
+              )}
             </Button>
           </form>
           
@@ -103,7 +114,7 @@ const Login = () => {
           <div className="mt-8 text-center">
             <div className="inline-flex items-center gap-2 bg-white/5 px-3 py-1 rounded-full">
               <Lock className="h-3 w-3 text-safespeak-green" />
-              <span className="text-xs text-white/60">Blockchain Secured & Anonymous</span>
+              <span className="text-xs text-white/60">Static Authentication</span>
             </div>
           </div>
         </motion.div>
