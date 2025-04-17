@@ -63,134 +63,19 @@ interface Report {
   date: string;
   status: 'pending' | 'under-investigation' | 'resolved' | 'closed';
   priority: 'low' | 'medium' | 'high' | 'urgent';
-  evidence: Evidence[];
+  evidence?: Evidence[];
   userDetails?: {
     id?: string;
     pseudonym?: string;
   };
 }
 
-// Mock data
-const mockReports: Report[] = [
-  {
-    id: 'RPT-A1B2C3D4',
-    crimeType: 'Theft',
-    description: 'My car was broken into last night. The window was smashed and my laptop and bag were stolen.',
-    location: 'Downtown, Main Street',
-    date: '2025-04-01',
-    status: 'pending',
-    priority: 'medium',
-    evidence: [
-      {
-        id: 'ev-001',
-        filename: 'car-damage.jpg',
-        type: 'image',
-        url: '/mock-evidence/car.jpg',
-        size: '2.4 MB'
-      },
-      {
-        id: 'ev-002',
-        filename: 'police-report.pdf',
-        type: 'pdf',
-        url: '/mock-evidence/report.pdf',
-        size: '1.2 MB'
-      }
-    ],
-    userDetails: undefined
-  },
-  {
-    id: 'RPT-E5F6G7H8',
-    crimeType: 'Fraud',
-    description: 'I received a suspicious email claiming to be from my bank. They were asking for my personal information and account details.',
-    location: 'Online',
-    date: '2025-04-02',
-    status: 'under-investigation',
-    priority: 'high',
-    evidence: [
-      {
-        id: 'ev-003',
-        filename: 'phishing-email.png',
-        type: 'image',
-        url: '/mock-evidence/email.png',
-        size: '1.8 MB'
-      }
-    ],
-    userDetails: {
-      pseudonym: 'Anonymous27'
-    }
-  },
-  {
-    id: 'RPT-I9J0K1L2',
-    crimeType: 'Assault',
-    description: 'I witnessed a fight outside a bar last night. One person was seriously injured.',
-    location: 'Nightlife District, Club Area',
-    date: '2025-04-03',
-    status: 'resolved',
-    priority: 'urgent',
-    evidence: [
-      {
-        id: 'ev-004',
-        filename: 'incident-video.mp4',
-        type: 'video',
-        url: '/mock-evidence/video.mp4',
-        size: '15.7 MB'
-      },
-      {
-        id: 'ev-005',
-        filename: 'location.jpg',
-        type: 'image',
-        url: '/mock-evidence/location.jpg',
-        size: '3.1 MB'
-      }
-    ],
-    userDetails: {
-      pseudonym: 'Witness123'
-    }
-  },
-  {
-    id: 'RPT-M3N4O5P6',
-    crimeType: 'Cybercrime',
-    description: 'My social media account was hacked and is now being used to scam my contacts.',
-    location: 'Online',
-    date: '2025-04-05',
-    status: 'under-investigation',
-    priority: 'medium',
-    evidence: [
-      {
-        id: 'ev-006',
-        filename: 'scam-messages.pdf',
-        type: 'pdf',
-        url: '/mock-evidence/scam.pdf',
-        size: '0.8 MB'
-      }
-    ],
-    userDetails: {
-      pseudonym: 'DigitalUser42'
-    }
-  },
-  {
-    id: 'RPT-Q7R8S9T0',
-    crimeType: 'Vandalism',
-    description: 'Graffiti was sprayed on the community center wall overnight.',
-    location: 'West Side, Community Park',
-    date: '2025-04-07',
-    status: 'closed',
-    priority: 'low',
-    evidence: [
-      {
-        id: 'ev-007',
-        filename: 'graffiti.jpg',
-        type: 'image',
-        url: '/mock-evidence/graffiti.jpg',
-        size: '4.2 MB'
-      }
-    ],
-    userDetails: undefined
-  }
-];
+interface CaseManagementProps {
+  allReports: Report[];
+}
 
-const CaseManagement = () => {
-  const [reports, setReports] = useState<Report[]>(mockReports);
+const CaseManagement = ({ allReports = [] }: CaseManagementProps) => {
+  const [reports, setReports] = useState<Report[]>(allReports);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedCase, setSelectedCase] = useState<Report | null>(null);
   const [statusDialogOpen, setStatusDialogOpen] = useState(false);
@@ -200,10 +85,10 @@ const CaseManagement = () => {
   
   // Filter reports based on search query
   const filteredReports = reports.filter(report => 
-    report.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    report.crimeType.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    report.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    report.location.toLowerCase().includes(searchQuery.toLowerCase())
+    report.id?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    report.crimeType?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    report.description?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    report.location?.toLowerCase().includes(searchQuery.toLowerCase())
   );
   
   const getStatusIcon = (status: Report['status']) => {
@@ -287,6 +172,9 @@ const CaseManagement = () => {
     
     setReports(updatedReports);
     
+    // Update in localStorage
+    localStorage.setItem('userReports', JSON.stringify(updatedReports));
+    
     // Update the selected case
     setSelectedCase(prev => prev ? { ...prev, status: updateStatus } : null);
     
@@ -361,37 +249,39 @@ const CaseManagement = () => {
               </tr>
             </thead>
             <tbody>
-              {filteredReports.map((report) => (
-                <tr key={report.id} className="border-b border-white/5 hover:bg-white/5">
-                  <td className="p-4 font-mono text-sm">{report.id}</td>
-                  <td className="p-4">{report.crimeType}</td>
-                  <td className="p-4">{report.location}</td>
-                  <td className="p-4 text-sm text-white/70">{report.date}</td>
-                  <td className="p-4">{getPriorityBadge(report.priority)}</td>
-                  <td className="p-4">
-                    <div className="flex items-center gap-1.5">
-                      {getStatusIcon(report.status)}
-                      <span className="text-sm">{getStatusLabel(report.status)}</span>
-                    </div>
-                  </td>
-                  <td className="p-4 text-right">
-                    <Button 
-                      size="sm" 
-                      variant="outline" 
-                      className="text-xs"
-                      onClick={() => handleViewCase(report)}
-                    >
-                      <Eye className="h-3.5 w-3.5 mr-1" />
-                      View Details
-                    </Button>
-                  </td>
-                </tr>
-              ))}
-              
-              {filteredReports.length === 0 && (
+              {filteredReports.length > 0 ? (
+                filteredReports.map((report) => (
+                  <tr key={report.id} className="border-b border-white/5 hover:bg-white/5">
+                    <td className="p-4 font-mono text-sm">{report.id}</td>
+                    <td className="p-4">{report.crimeType}</td>
+                    <td className="p-4">{report.location}</td>
+                    <td className="p-4 text-sm text-white/70">{report.date}</td>
+                    <td className="p-4">{getPriorityBadge(report.priority)}</td>
+                    <td className="p-4">
+                      <div className="flex items-center gap-1.5">
+                        {getStatusIcon(report.status)}
+                        <span className="text-sm">{getStatusLabel(report.status)}</span>
+                      </div>
+                    </td>
+                    <td className="p-4 text-right">
+                      <Button 
+                        size="sm" 
+                        variant="outline" 
+                        className="text-xs"
+                        onClick={() => handleViewCase(report)}
+                      >
+                        <Eye className="h-3.5 w-3.5 mr-1" />
+                        View Details
+                      </Button>
+                    </td>
+                  </tr>
+                ))
+              ) : (
                 <tr>
                   <td colSpan={7} className="p-8 text-center text-white/60">
-                    No reports found matching your search.
+                    {searchQuery 
+                      ? "No reports found matching your search." 
+                      : "No reports have been submitted yet."}
                   </td>
                 </tr>
               )}
@@ -417,7 +307,7 @@ const CaseManagement = () => {
             <Tabs defaultValue="details" className="mt-4">
               <TabsList className="grid grid-cols-3 mb-4">
                 <TabsTrigger value="details">Case Details</TabsTrigger>
-                <TabsTrigger value="evidence">Evidence ({selectedCase.evidence.length})</TabsTrigger>
+                <TabsTrigger value="evidence">Evidence</TabsTrigger>
                 <TabsTrigger value="status">Status Update</TabsTrigger>
               </TabsList>
               
@@ -455,7 +345,7 @@ const CaseManagement = () => {
               </TabsContent>
               
               <TabsContent value="evidence" className="space-y-4">
-                {selectedCase.evidence.length > 0 ? (
+                {selectedCase.evidence && selectedCase.evidence.length > 0 ? (
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     {selectedCase.evidence.map((item) => (
                       <div key={item.id} className="flex items-center gap-3 bg-safespeak-dark-accent/30 p-3 rounded-lg">
@@ -535,9 +425,9 @@ const CaseManagement = () => {
                   
                   <div className="space-y-4">
                     <div className="border-l-2 border-safespeak-blue pl-4 py-2">
-                      <p className="text-xs text-white/60">2025-04-08</p>
+                      <p className="text-xs text-white/60">{new Date().toISOString().split('T')[0]}</p>
                       <p className="font-medium">Case status changed to: {getStatusLabel(selectedCase.status)}</p>
-                      <p className="text-sm text-white/70">Initial review complete. Moving to appropriate workflow.</p>
+                      <p className="text-sm text-white/70">Initial review complete.</p>
                     </div>
                     <div className="border-l-2 border-safespeak-blue pl-4 py-2">
                       <p className="text-xs text-white/60">{selectedCase.date}</p>

@@ -1,8 +1,8 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { 
-  ShieldCheck, User, FileText, CheckCircle, AlertTriangle, 
+  ShieldCheck, FileText, CheckCircle, AlertTriangle, 
   Clock, MessageSquare, BarChart2, LogOut, AlertTriangle as ExclamationTriangle
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -26,6 +26,15 @@ const AdminDashboard = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
+  const [reports, setReports] = useState([]);
+  
+  useEffect(() => {
+    // In a real app, this would fetch all reports from a database
+    // For now, we'll check localStorage for any submitted reports
+    const storedReports = localStorage.getItem('userReports');
+    const parsedReports = storedReports ? JSON.parse(storedReports) : [];
+    setReports(parsedReports);
+  }, []);
   
   const handleLogout = () => {
     logout();
@@ -36,11 +45,11 @@ const AdminDashboard = () => {
     navigate('/');
   };
 
-  // Calculate stats
-  const totalReports = 5;
-  const solvedReports = 1;
-  const criticalReports = 1;
-  const pendingReports = 2;
+  // Calculate stats based on actual reports
+  const totalReports = reports.length;
+  const solvedReports = reports.filter(r => r.status === 'resolved').length;
+  const criticalReports = reports.filter(r => r.priority === 'urgent' || r.priority === 'high').length;
+  const pendingReports = reports.filter(r => r.status === 'pending').length;
   
   return (
     <div className="min-h-screen flex flex-col bg-safespeak-dark">
@@ -147,39 +156,56 @@ const AdminDashboard = () => {
               </Button>
             </div>
             
-            <div className="space-y-5">
-              <div>
-                <div className="flex justify-between mb-2">
-                  <p className="text-sm font-medium">Solved</p>
-                  <p className="text-sm text-white/70">{(solvedReports / totalReports * 100).toFixed(1)}%</p>
+            {totalReports > 0 ? (
+              <div className="space-y-5">
+                <div>
+                  <div className="flex justify-between mb-2">
+                    <p className="text-sm font-medium">Solved</p>
+                    <p className="text-sm text-white/70">
+                      {(solvedReports / totalReports * 100).toFixed(1)}%
+                    </p>
+                  </div>
+                  <Progress value={solvedReports / totalReports * 100} className="h-2" />
                 </div>
-                <Progress value={solvedReports / totalReports * 100} className="h-2" />
-              </div>
-              
-              <div>
-                <div className="flex justify-between mb-2">
-                  <p className="text-sm font-medium">Under Investigation</p>
-                  <p className="text-sm text-white/70">40.0%</p>
+                
+                <div>
+                  <div className="flex justify-between mb-2">
+                    <p className="text-sm font-medium">Under Investigation</p>
+                    <p className="text-sm text-white/70">
+                      {(reports.filter(r => r.status === 'under-investigation').length / totalReports * 100).toFixed(1)}%
+                    </p>
+                  </div>
+                  <Progress 
+                    value={reports.filter(r => r.status === 'under-investigation').length / totalReports * 100} 
+                    className="h-2" 
+                  />
                 </div>
-                <Progress value={40} className="h-2" />
-              </div>
-              
-              <div>
-                <div className="flex justify-between mb-2">
-                  <p className="text-sm font-medium">Pending Review</p>
-                  <p className="text-sm text-white/70">{(pendingReports / totalReports * 100).toFixed(1)}%</p>
+                
+                <div>
+                  <div className="flex justify-between mb-2">
+                    <p className="text-sm font-medium">Pending Review</p>
+                    <p className="text-sm text-white/70">
+                      {(pendingReports / totalReports * 100).toFixed(1)}%
+                    </p>
+                  </div>
+                  <Progress value={pendingReports / totalReports * 100} className="h-2" />
                 </div>
-                <Progress value={pendingReports / totalReports * 100} className="h-2" />
-              </div>
-              
-              <div>
-                <div className="flex justify-between mb-2">
-                  <p className="text-sm font-medium">Critical Cases</p>
-                  <p className="text-sm text-white/70">{(criticalReports / totalReports * 100).toFixed(1)}%</p>
+                
+                <div>
+                  <div className="flex justify-between mb-2">
+                    <p className="text-sm font-medium">Critical Cases</p>
+                    <p className="text-sm text-white/70">
+                      {(criticalReports / totalReports * 100).toFixed(1)}%
+                    </p>
+                  </div>
+                  <Progress value={criticalReports / totalReports * 100} className="h-2" />
                 </div>
-                <Progress value={criticalReports / totalReports * 100} className="h-2" />
               </div>
-            </div>
+            ) : (
+              <div className="text-center py-8">
+                <p className="text-white/50">No reports have been submitted yet.</p>
+              </div>
+            )}
           </motion.div>
           
           {/* Main Tabs */}
@@ -188,15 +214,15 @@ const AdminDashboard = () => {
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5 }}
           >
-            <Tabs defaultValue="critical">
+            <Tabs defaultValue="cases">
               <TabsList className="mb-6">
-                <TabsTrigger value="critical" className="flex items-center gap-1.5">
-                  <ExclamationTriangle className="h-4 w-4" />
-                  <span>Critical Cases</span>
-                </TabsTrigger>
                 <TabsTrigger value="cases" className="flex items-center gap-1.5">
                   <FileText className="h-4 w-4" />
                   <span>Case Management</span>
+                </TabsTrigger>
+                <TabsTrigger value="critical" className="flex items-center gap-1.5">
+                  <ExclamationTriangle className="h-4 w-4" />
+                  <span>Critical Cases</span>
                 </TabsTrigger>
                 <TabsTrigger value="feedback" className="flex items-center gap-1.5">
                   <MessageSquare className="h-4 w-4" />
@@ -204,12 +230,12 @@ const AdminDashboard = () => {
                 </TabsTrigger>
               </TabsList>
               
-              <TabsContent value="critical">
-                <CriticalCases />
+              <TabsContent value="cases">
+                <CaseManagement allReports={reports} />
               </TabsContent>
               
-              <TabsContent value="cases">
-                <CaseManagement />
+              <TabsContent value="critical">
+                <CriticalCases />
               </TabsContent>
               
               <TabsContent value="feedback">

@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { useToast } from '@/components/ui/use-toast';
+import { useToast } from '@/hooks/use-toast';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { useAuth } from '../contexts/AuthContext';
@@ -46,16 +46,18 @@ const ReportCrime = () => {
   // This would use your AI integration in a real app
   const simulateAIDetection = (description: string) => {
     // In a real app, this would call your NLP service
-    const types = crimeTypes;
-    const randomType = types[Math.floor(Math.random() * types.length)];
-    
-    setTimeout(() => {
-      setAiDetectedType(randomType);
-      toast({
-        title: "AI Detection",
-        description: `The AI suggests this is a ${randomType} case.`,
-      });
-    }, 1000);
+    if (description.length > 20) {
+      const types = crimeTypes;
+      const randomType = types[Math.floor(Math.random() * types.length)];
+      
+      setTimeout(() => {
+        setAiDetectedType(randomType);
+        toast({
+          title: "AI Detection",
+          description: `The AI suggests this is a ${randomType} case.`,
+        });
+      }, 1000);
+    }
   };
   
   const onFileChange = (files: File[]) => {
@@ -66,16 +68,44 @@ const ReportCrime = () => {
     setIsSubmitting(true);
     
     try {
-      // In a real app, this would send data to your blockchain storage
-      console.log("Submitting report:", { ...data, evidenceFiles });
-      
-      // Simulate API call delay
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      
-      // Generate a fake report ID (in a real app this would come from blockchain)
+      // Generate a report ID (in a real app this would be from a database)
       const generatedId = `SS-${Math.floor(100000 + Math.random() * 900000)}`;
       setReportId(generatedId);
       
+      // Create a new report object
+      const newReport = {
+        id: generatedId,
+        crimeType: data.crimeType,
+        description: data.description,
+        location: data.location,
+        date: data.date,
+        status: 'pending',
+        priority: Math.random() > 0.7 ? 'high' : Math.random() > 0.5 ? 'medium' : 'low',
+        userDetails: {
+          pseudonym: user?.pseudonym || 'Anonymous'
+        },
+        evidence: evidenceFiles.map((file, index) => ({
+          id: `ev-${index}`,
+          filename: file.name,
+          type: file.type.includes('image') ? 'image' : 
+                file.type.includes('video') ? 'video' :
+                file.type.includes('pdf') ? 'pdf' : 'document',
+          url: URL.createObjectURL(file),
+          size: `${(file.size / (1024 * 1024)).toFixed(2)} MB`
+        }))
+      };
+      
+      // Get existing reports from localStorage
+      const existingReports = localStorage.getItem('userReports');
+      const reports = existingReports ? JSON.parse(existingReports) : [];
+      
+      // Add the new report
+      reports.push(newReport);
+      
+      // Save back to localStorage
+      localStorage.setItem('userReports', JSON.stringify(reports));
+      
+      // Show success toast
       toast({
         title: "Report Submitted",
         description: "Your crime report has been successfully submitted.",
@@ -313,7 +343,7 @@ const ReportCrime = () => {
                   <h2 className="text-xl font-semibold">Report Successfully Submitted</h2>
                   
                   <p className="text-white/80">
-                    Your report has been securely submitted and stored on the blockchain.
+                    Your report has been securely submitted and stored.
                   </p>
                   
                   <div className="p-4 bg-white/5 rounded-lg">
@@ -324,7 +354,7 @@ const ReportCrime = () => {
                     </p>
                   </div>
                   
-                  <div className="flex justify-center gap-4 pt-4">
+                  <div className="flex flex-col sm:flex-row justify-center gap-4 pt-4">
                     <Button 
                       type="button" 
                       variant="outline" 
@@ -335,9 +365,9 @@ const ReportCrime = () => {
                     <Button 
                       type="button" 
                       className="bg-safespeak-blue hover:bg-safespeak-blue/90"
-                      onClick={() => window.location.href = '/track'}
+                      onClick={() => window.location.href = '/dashboard'}
                     >
-                      Track This Report
+                      View Dashboard
                     </Button>
                   </div>
                 </div>
