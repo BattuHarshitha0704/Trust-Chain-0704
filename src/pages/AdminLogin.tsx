@@ -23,7 +23,7 @@ import Footer from "@/components/Footer";
 
 const formSchema = z.object({
   email: z.string().email({ message: "Please enter a valid email address" }),
-  password: z.string().min(8, { message: "Password must be at least 8 characters" }),
+  password: z.string().min(6, { message: "Password must be at least 6 characters" }),
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -33,6 +33,7 @@ const AdminLogin = () => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
@@ -44,6 +45,7 @@ const AdminLogin = () => {
   
   const onSubmit = async (values: FormValues) => {
     setIsLoading(true);
+    setErrorMessage(null);
     
     try {
       await adminLogin(values.email, values.password);
@@ -52,8 +54,9 @@ const AdminLogin = () => {
         description: "Welcome to the admin dashboard.",
       });
       navigate("/admin");
-    } catch (error) {
-      // Error is already handled in adminLogin function
+    } catch (error: any) {
+      const message = error.message || "Login failed. Please check your credentials.";
+      setErrorMessage(message);
       console.error(error);
     } finally {
       setIsLoading(false);
@@ -83,6 +86,12 @@ const AdminLogin = () => {
                 Access the administrative dashboard
               </p>
             </div>
+            
+            {errorMessage && (
+              <div className="bg-red-500/10 border border-red-500/20 text-red-400 px-4 py-2 rounded-md mb-6 text-sm">
+                {errorMessage}
+              </div>
+            )}
             
             <Form {...form}>
               <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">

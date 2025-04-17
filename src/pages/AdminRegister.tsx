@@ -60,11 +60,11 @@ const AdminRegister = () => {
     
     try {
       await adminRegister(values.fullName, values.email, values.password);
+      // Don't navigate - the auth context will auto-login and we'll be redirected
       toast({
         title: "Registration successful",
         description: "Your admin account has been created",
       });
-      navigate("/admin-login");
     } catch (error: any) {
       console.error('Admin registration error:', error);
       const message = error.message || "Unable to create admin account. Please try again.";

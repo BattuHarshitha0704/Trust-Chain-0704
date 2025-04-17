@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -139,6 +140,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const adminRegister = async (fullName: string, email: string, password: string) => {
     try {
+      // Skip email verification by using signInWithPassword immediately after signup
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
@@ -146,8 +148,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           data: {
             full_name: fullName,
             is_admin: true,
-          },
-          emailRedirectTo: window.location.origin
+          }
         }
       });
       
@@ -163,10 +164,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           });
           
         if (userError) throw userError;
+        
+        // Auto sign-in after registration to bypass email verification
+        await supabase.auth.signInWithPassword({
+          email,
+          password
+        });
           
         toast({
           title: "Registration Successful",
-          description: "Admin account created. Please check your email for verification.",
+          description: "Admin account created successfully. You are now logged in.",
         });
       }
     } catch (error: any) {
@@ -183,6 +190,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       const email = `${pseudonym.toLowerCase()}@safespeak.anonymous`;
       
+      // Skip email verification by using signInWithPassword immediately after signup
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
@@ -190,8 +198,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           data: {
             pseudonym,
             is_admin: false,
-          },
-          emailRedirectTo: window.location.origin
+          }
         }
       });
       
@@ -207,10 +214,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           });
           
         if (userError) throw userError;
+        
+        // Auto sign-in after registration to bypass email verification
+        await supabase.auth.signInWithPassword({
+          email,
+          password
+        });
           
         toast({
           title: "Registration Successful",
-          description: "Your anonymous profile has been created. For testing purposes, you can now login directly.",
+          description: "Your anonymous profile has been created. You are now logged in.",
         });
       }
     } catch (error: any) {

@@ -58,11 +58,11 @@ const Register = () => {
     
     try {
       await register(pseudonym, password);
+      // Don't navigate - the auth context will auto-login and the useEffect in the protected route will handle navigation
       toast({
         title: "Success",
         description: "Your anonymous profile has been created",
       });
-      navigate('/dashboard');
     } catch (error: any) {
       console.error('Registration error:', error);
       const message = error.message || "Failed to create your profile";

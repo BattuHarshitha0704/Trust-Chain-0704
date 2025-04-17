@@ -33,6 +33,7 @@ const Login = () => {
     setIsLoading(true);
     
     try {
+      // Convert pseudonym to email format for authentication
       const email = `${pseudonym.toLowerCase()}@safespeak.anonymous`;
       await login(email, password);
       toast({
