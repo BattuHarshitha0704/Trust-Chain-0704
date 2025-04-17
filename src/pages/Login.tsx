@@ -14,19 +14,17 @@ const Login = () => {
   const [pseudonym, setPseudonym] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const { login } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
+    setErrorMessage(null);
     
     if (!pseudonym || !password) {
-      toast({
-        title: "Error",
-        description: "Please fill in all fields",
-        variant: "destructive"
-      });
+      setErrorMessage("Please fill in all fields");
       return;
     }
     
@@ -36,13 +34,10 @@ const Login = () => {
       // Convert pseudonym to email format for authentication
       const email = `${pseudonym.toLowerCase()}@safespeak.anonymous`;
       await login(email, password);
-      toast({
-        title: "Success",
-        description: "You've been logged in successfully",
-      });
       navigate('/dashboard');
-    } catch (error) {
-      // Error is already handled in login function
+    } catch (error: any) {
+      const message = error.message || "Login failed. Please check your credentials.";
+      setErrorMessage(message);
       console.error(error);
     } finally {
       setIsLoading(false);
@@ -70,6 +65,12 @@ const Login = () => {
           
           <h1 className="text-2xl font-bold text-center mb-6">Anonymous Login</h1>
           
+          {errorMessage && (
+            <div className="bg-red-500/10 border border-red-500/20 text-red-400 px-4 py-2 rounded-md mb-4 text-sm">
+              {errorMessage}
+            </div>
+          )}
+          
           <form onSubmit={handleLogin} className="space-y-4">
             <div className="space-y-2">
               <Label htmlFor="pseudonym">Pseudonym</Label>
@@ -79,6 +80,7 @@ const Login = () => {
                 value={pseudonym}
                 onChange={(e) => setPseudonym(e.target.value)}
                 className="bg-safespeak-dark-accent border-white/10"
+                disabled={isLoading}
               />
             </div>
             
@@ -91,6 +93,7 @@ const Login = () => {
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 className="bg-safespeak-dark-accent border-white/10"
+                disabled={isLoading}
               />
             </div>
             

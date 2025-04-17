@@ -49,10 +49,6 @@ const AdminLogin = () => {
     
     try {
       await adminLogin(values.email, values.password);
-      toast({
-        title: "Login successful",
-        description: "Welcome to the admin dashboard.",
-      });
       navigate("/admin");
     } catch (error: any) {
       const message = error.message || "Login failed. Please check your credentials.";
@@ -106,6 +102,7 @@ const AdminLogin = () => {
                           placeholder="admin@safespeak.com" 
                           {...field}
                           type="email"
+                          disabled={isLoading}
                         />
                       </FormControl>
                       <FormMessage />
@@ -124,6 +121,7 @@ const AdminLogin = () => {
                           placeholder="••••••••" 
                           type="password" 
                           {...field}
+                          disabled={isLoading}
                         />
                       </FormControl>
                       <FormMessage className="text-xs" />

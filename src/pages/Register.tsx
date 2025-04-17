@@ -26,31 +26,16 @@ const Register = () => {
     
     if (!pseudonym || !password || !confirmPassword) {
       setErrorMessage("Please fill in all fields");
-      toast({
-        title: "Error",
-        description: "Please fill in all fields",
-        variant: "destructive"
-      });
       return;
     }
     
     if (password !== confirmPassword) {
       setErrorMessage("Passwords do not match");
-      toast({
-        title: "Error",
-        description: "Passwords do not match",
-        variant: "destructive"
-      });
       return;
     }
     
     if (password.length < 6) {
       setErrorMessage("Password must be at least 6 characters long");
-      toast({
-        title: "Error",
-        description: "Password must be at least 6 characters long",
-        variant: "destructive"
-      });
       return;
     }
     
@@ -58,20 +43,11 @@ const Register = () => {
     
     try {
       await register(pseudonym, password);
-      // Don't navigate - the auth context will auto-login and the useEffect in the protected route will handle navigation
-      toast({
-        title: "Success",
-        description: "Your anonymous profile has been created",
-      });
+      // Auth context will handle navigation after successful registration
     } catch (error: any) {
       console.error('Registration error:', error);
       const message = error.message || "Failed to create your profile";
       setErrorMessage(message);
-      toast({
-        title: "Error",
-        description: message,
-        variant: "destructive"
-      });
     } finally {
       setIsLoading(false);
     }

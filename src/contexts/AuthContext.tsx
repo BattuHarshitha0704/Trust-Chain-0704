@@ -33,23 +33,23 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const { toast } = useToast();
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session) {
-        handleUserSession(session.user);
-      } else {
-        setLoading(false);
-      }
-    });
-
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
+    // Set up auth state listener FIRST
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       if (session) {
         handleUserSession(session.user);
       } else {
         setUser(null);
         setIsAuthenticated(false);
         setIsAdmin(false);
+        setLoading(false);
+      }
+    });
+
+    // THEN check for existing session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session) {
+        handleUserSession(session.user);
+      } else {
         setLoading(false);
       }
     });
@@ -140,42 +140,47 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const adminRegister = async (fullName: string, email: string, password: string) => {
     try {
-      // Skip email verification by using signInWithPassword immediately after signup
+      // First create the user account
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
-        options: {
-          data: {
-            full_name: fullName,
-            is_admin: true,
-          }
-        }
       });
       
       if (error) throw error;
-
-      if (data.user) {
-        const { error: userError } = await supabase
-          .from('users')
-          .upsert({ 
-            id: data.user.id, 
-            is_admin: true, 
-            pseudonym: email.split('@')[0],
-          });
-          
-        if (userError) throw userError;
-        
-        // Auto sign-in after registration to bypass email verification
-        await supabase.auth.signInWithPassword({
-          email,
-          password
-        });
-          
-        toast({
-          title: "Registration Successful",
-          description: "Admin account created successfully. You are now logged in.",
-        });
+      
+      if (!data.user) {
+        throw new Error('Failed to create admin account');
       }
+
+      // Then create the admin record in the users table
+      const { error: userError } = await supabase
+        .from('users')
+        .insert({ 
+          id: data.user.id, 
+          is_admin: true, 
+          pseudonym: email.split('@')[0],
+        });
+        
+      if (userError) {
+        // Clean up auth user if user table insert fails
+        console.error('Failed to create admin user record, cleaning up auth user');
+        throw userError;
+      }
+      
+      // Auto sign-in after registration
+      const { error: signInError } = await supabase.auth.signInWithPassword({
+        email,
+        password
+      });
+      
+      if (signInError) {
+        throw signInError;
+      }
+        
+      toast({
+        title: "Registration Successful",
+        description: "Admin account created successfully. You are now logged in.",
+      });
     } catch (error: any) {
       toast({
         title: "Admin Registration Failed",
@@ -190,42 +195,47 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       const email = `${pseudonym.toLowerCase()}@safespeak.anonymous`;
       
-      // Skip email verification by using signInWithPassword immediately after signup
+      // First create the auth user
       const { data, error } = await supabase.auth.signUp({
         email,
         password,
-        options: {
-          data: {
-            pseudonym,
-            is_admin: false,
-          }
-        }
       });
       
       if (error) throw error;
-
-      if (data.user) {
-        const { error: userError } = await supabase
-          .from('users')
-          .upsert({ 
-            id: data.user.id, 
-            pseudonym, 
-            is_admin: false
-          });
-          
-        if (userError) throw userError;
-        
-        // Auto sign-in after registration to bypass email verification
-        await supabase.auth.signInWithPassword({
-          email,
-          password
-        });
-          
-        toast({
-          title: "Registration Successful",
-          description: "Your anonymous profile has been created. You are now logged in.",
-        });
+      
+      if (!data.user) {
+        throw new Error('Failed to create user account');
       }
+
+      // Then create the user record in our users table
+      const { error: userError } = await supabase
+        .from('users')
+        .insert({ 
+          id: data.user.id, 
+          pseudonym, 
+          is_admin: false
+        });
+        
+      if (userError) {
+        // Clean up auth user if user table insert fails
+        console.error('Failed to create user record, cleaning up auth user');
+        throw userError;
+      }
+      
+      // Auto sign-in after registration
+      const { error: signInError } = await supabase.auth.signInWithPassword({
+        email,
+        password
+      });
+      
+      if (signInError) {
+        throw signInError;
+      }
+      
+      toast({
+        title: "Registration Successful",
+        description: "Your anonymous profile has been created. You are now logged in.",
+      });
     } catch (error: any) {
       toast({
         title: "Registration Failed",
