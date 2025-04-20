@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { motion } from "framer-motion";
 import { Shield, Menu, X, LogOut, FilePenLine, Clock, MessageSquare, Home } from "lucide-react";
@@ -36,21 +35,19 @@ const Navbar = () => {
       ];
 
   return (
-    <header className="fixed top-0 left-0 w-full z-50 bg-safespeak-dark/80 backdrop-blur-md border-b border-white/10">
+    <header className="fixed top-0 left-0 w-full z-50 bg-trust-chain-dark/80 backdrop-blur-md border-b border-white/10">
       <div className="container mx-auto flex items-center justify-between py-4 px-4">
-        {/* Logo */}
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ duration: 0.5 }}
         >
           <Link to={user ? (user.isAdmin ? "/admin" : "/dashboard") : "/"} className="flex items-center gap-2 text-white">
-            <Shield className="h-7 w-7 text-safespeak-blue" />
-            <span className="text-xl font-bold">Safe<span className="text-safespeak-blue">Speak</span></span>
+            <Shield className="h-7 w-7 text-trust-chain-blue" />
+            <span className="text-xl font-bold">Trust<span className="text-trust-chain-blue">Chain</span></span>
           </Link>
         </motion.div>
 
-        {/* Desktop Navigation */}
         {user && (
           <motion.nav 
             className="hidden md:flex items-center gap-6"
@@ -87,7 +84,6 @@ const Navbar = () => {
           </motion.nav>
         )}
 
-        {/* Mobile Navigation */}
         {user && (
           <Sheet open={isOpen} onOpenChange={setIsOpen}>
             <SheetTrigger asChild className="md:hidden">

@@ -1,4 +1,3 @@
-
 /** @type {import('tailwindcss').Config} */
 export default {
   darkMode: ["class"],
@@ -49,9 +48,9 @@ export default {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
-        safespeak: {
+        "trust-chain": {
           blue: "#1E96F7",
-          green: "#10B981",
+          green: "#10B981", 
           dark: "#0F172A",
           "dark-accent": "#1A2234",
         },

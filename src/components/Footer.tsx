@@ -4,13 +4,13 @@ import { Link } from 'react-router-dom';
 
 const Footer = () => {
   return (
-    <footer className="bg-safespeak-dark-accent/50 border-t border-white/5 py-8">
+    <footer className="bg-trust-chain-dark-accent/50 border-t border-white/5 py-8">
       <div className="container mx-auto px-4">
         <div className="flex flex-col md:flex-row justify-between items-center">
           <div className="mb-6 md:mb-0">
             <Link to="/" className="flex items-center gap-2">
-              <Shield className="h-6 w-6 text-safespeak-blue" />
-              <span className="text-lg font-bold">Safe<span className="text-safespeak-blue">Speak</span></span>
+              <Shield className="h-6 w-6 text-trust-chain-blue" />
+              <span className="text-lg font-bold">Trust<span className="text-trust-chain-blue">Chain</span></span>
             </Link>
             <p className="text-white/60 text-sm mt-2 max-w-sm">
               Anonymous crime reporting platform secured by blockchain technology.
@@ -60,3 +60,4 @@ const Footer = () => {
 };
 
 export default Footer;
+
