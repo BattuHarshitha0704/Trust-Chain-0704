@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { z } from "zod";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -18,6 +18,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Progress } from "@/components/ui/progress";
 import { Badge } from "@/components/ui/badge";
 import { motion } from "framer-motion";
+import { supabase } from "@/integrations/supabase/client";
 
 const formSchema = z.object({
   reportId: z.string()
@@ -54,8 +55,43 @@ const TrackingForm = () => {
   const onSubmit = async (values: TrackingFormValues) => {
     setIsLoading(true);
     
-    // Mock API call
-    setTimeout(() => {
+    try {
+      // Try to fetch from Supabase first
+      const { data: reportData, error } = await supabase
+        .from('reports')
+        .select('*')
+        .eq('id', values.reportId)
+        .single();
+        
+      if (!error && reportData) {
+        // Map Supabase data to our format
+        const reportStatus: ReportStatus = {
+          id: reportData.id,
+          status: mapStatus(reportData.status || 'pending'),
+          progress: getProgressFromStatus(mapStatus(reportData.status || 'pending')),
+          lastUpdated: new Date(reportData.created_at || new Date()).toISOString().split('T')[0],
+          category: reportData.crime_type || "Unknown",
+          updates: generateUpdates(reportData.status || 'pending', reportData.created_at)
+        };
+        
+        setReport(reportStatus);
+      } else {
+        // Fallback to mock data if not found in Supabase
+        const mockData = getMockReportData(values.reportId);
+        
+        if (mockData) {
+          setReport(mockData);
+        } else {
+          toast({
+            title: "Report not found",
+            description: "Please check the Report ID and try again",
+            variant: "destructive",
+          });
+        }
+      }
+    } catch (error) {
+      console.error("Error fetching report:", error);
+      // Fallback to mock data
       const mockData = getMockReportData(values.reportId);
       
       if (mockData) {
@@ -67,14 +103,94 @@ const TrackingForm = () => {
           variant: "destructive",
         });
       }
-      
+    } finally {
       setIsLoading(false);
-    }, 1500);
+    }
+  };
+  
+  // Map status from admin module to our format
+  const mapStatus = (status: string): "reviewing" | "investigating" | "solved" | "closed" => {
+    switch (status) {
+      case "pending": return "reviewing";
+      case "under-investigation": return "investigating";
+      case "resolved": return "solved";
+      case "closed": return "closed";
+      default: return "reviewing";
+    }
+  };
+  
+  // Generate progress based on status
+  const getProgressFromStatus = (status: ReportStatus["status"]) => {
+    switch (status) {
+      case "reviewing": return Math.floor(Math.random() * 30) + 10; // 10-40%
+      case "investigating": return Math.floor(Math.random() * 40) + 30; // 30-70%
+      case "solved": return Math.floor(Math.random() * 20) + 80; // 80-100%
+      case "closed": return 100;
+      default: return 10;
+    }
+  };
+  
+  // Generate updates based on status
+  const generateUpdates = (status: string, createdAt: string | null) => {
+    const today = new Date();
+    const created = createdAt ? new Date(createdAt) : new Date(today.getTime() - 259200000);
+    
+    const updates = [
+      {
+        date: created.toISOString().split('T')[0],
+        message: "Your report has been received and is being processed.",
+      }
+    ];
+    
+    if (status !== 'pending') {
+      updates.push({
+        date: new Date(created.getTime() + 86400000).toISOString().split('T')[0],
+        message: "Your report has been assigned to an investigator.",
+      });
+    }
+    
+    if (status === 'under-investigation' || status === 'resolved' || status === 'closed') {
+      updates.push({
+        date: new Date(created.getTime() + 172800000).toISOString().split('T')[0],
+        message: "Investigation has commenced based on the provided information.",
+      });
+    }
+    
+    if (status === 'resolved' || status === 'closed') {
+      updates.push({
+        date: new Date(created.getTime() + 259200000).toISOString().split('T')[0],
+        message: "Investigation has concluded. Thank you for your report.",
+      });
+    }
+    
+    return updates;
   };
   
   // Mock function to simulate fetching report data
   const getMockReportData = (id: string): ReportStatus | null => {
-    // Simulate a 20% chance of not finding the report
+    // Check local storage first for reports from admin module
+    const storedReports = localStorage.getItem('userReports');
+    if (storedReports) {
+      try {
+        const reports = JSON.parse(storedReports);
+        const foundReport = reports.find((r: any) => r.id === id);
+        
+        if (foundReport) {
+          return {
+            id: foundReport.id,
+            status: mapStatus(foundReport.status),
+            progress: getProgressFromStatus(mapStatus(foundReport.status)),
+            lastUpdated: foundReport.date || new Date().toISOString().split('T')[0],
+            category: foundReport.crimeType || "Unknown",
+            updates: generateUpdates(foundReport.status, foundReport.created_at)
+          };
+        }
+      } catch (e) {
+        console.error("Error parsing stored reports:", e);
+      }
+    }
+    
+    // Simulate a 20% chance of not finding the report if not in local storage
     if (Math.random() < 0.2) {
       return null;
     }
