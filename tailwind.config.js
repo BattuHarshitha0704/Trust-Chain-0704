@@ -1,3 +1,4 @@
+
 /** @type {import('tailwindcss').Config} */
 export default {
   darkMode: ["class"],
@@ -53,6 +54,18 @@ export default {
           green: "#10B981", 
           dark: "#0F172A",
           "dark-accent": "#1A2234",
+        },
+        safespeak: {
+          blue: "#0EA5E9",
+          green: "#10B981",
+          dark: "#1A1F2C",
+          "dark-accent": "#2A303C",
+          "light-accent": "#D3E4FD",
+        },
+        dropdown: {
+          background: "#2A303C",
+          hover: "#384050",
+          text: "#FFFFFF",
         },
       },
       borderRadius: {

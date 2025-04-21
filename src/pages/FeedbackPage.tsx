@@ -8,6 +8,8 @@ import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/components/ui/use-toast';
 import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from '@/contexts/AuthContext';
 
 const feedbackTypes = [
   "App Experience",
@@ -20,6 +22,7 @@ const feedbackTypes = [
 
 const FeedbackPage = () => {
   const { toast } = useToast();
+  const { user } = useAuth();
   const [feedbackText, setFeedbackText] = useState('');
   const [selectedType, setSelectedType] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -75,8 +78,29 @@ const FeedbackPage = () => {
     setIsSubmitting(true);
     
     try {
-      // In a real app, this would send data to your backend/blockchain
-      await new Promise(resolve => setTimeout(resolve, 1500));
+      // Prepare feedback data
+      const feedbackData = {
+        content: feedbackText,
+        user_id: user?.id || null,
+        created_at: new Date().toISOString(),
+      };
+      
+      // Try to save to Supabase
+      if (supabase) {
+        const { error } = await supabase
+          .from('feedback')
+          .insert([feedbackData]);
+          
+        if (error) {
+          console.error("Error saving feedback to Supabase:", error);
+          saveFeedbackToLocalStorage(feedbackData);
+        } else {
+          console.log("Feedback saved to Supabase successfully");
+        }
+      } else {
+        // Fallback to localStorage
+        saveFeedbackToLocalStorage(feedbackData);
+      }
       
       toast({
         title: "Thank You!",
@@ -85,6 +109,7 @@ const FeedbackPage = () => {
       
       setIsSubmitted(true);
     } catch (error) {
+      console.error("Feedback submission error:", error);
       toast({
         title: "Submission Failed",
         description: "There was an error submitting your feedback. Please try again.",
@@ -93,6 +118,22 @@ const FeedbackPage = () => {
     } finally {
       setIsSubmitting(false);
     }
+  };
+  
+  const saveFeedbackToLocalStorage = (feedback: any) => {
+    // Get existing feedback from localStorage
+    const existingFeedback = localStorage.getItem('userFeedback');
+    const feedbackItems = existingFeedback ? JSON.parse(existingFeedback) : [];
+    
+    // Add new feedback
+    feedbackItems.push({
+      ...feedback,
+      id: `FB-${Date.now()}`,
+      type: selectedType
+    });
+    
+    // Save back to localStorage
+    localStorage.setItem('userFeedback', JSON.stringify(feedbackItems));
   };
 
   const handleReset = () => {
@@ -132,7 +173,7 @@ const FeedbackPage = () => {
                   <Label htmlFor="feedbackType">Feedback Type</Label>
                   <select 
                     id="feedbackType"
-                    className="w-full bg-safespeak-dark-accent border-white/10 rounded-md p-2"
+                    className="w-full bg-safespeak-dark-accent text-white border-white/10 rounded-md p-2"
                     value={selectedType}
                     onChange={(e) => setSelectedType(e.target.value)}
                     required

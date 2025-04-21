@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { FilePenLine, ArrowRight, CheckCircle, UploadCloud, Calendar, MapPin } from 'lucide-react';
@@ -12,6 +11,7 @@ import Navbar from '@/components/Navbar';
 import Footer from '@/components/Footer';
 import { useAuth } from '../contexts/AuthContext';
 import FileUpload from '@/components/FileUpload';
+import { supabase } from "@/integrations/supabase/client";
 
 type ReportFormData = {
   crimeType: string;
@@ -43,9 +43,7 @@ const ReportCrime = () => {
   const [reportId, setReportId] = useState<string | null>(null);
   const [aiDetectedType, setAiDetectedType] = useState<string | null>(null);
   
-  // This would use your AI integration in a real app
   const simulateAIDetection = (description: string) => {
-    // In a real app, this would call your NLP service
     if (description.length > 20) {
       const types = crimeTypes;
       const randomType = types[Math.floor(Math.random() * types.length)];
@@ -68,52 +66,43 @@ const ReportCrime = () => {
     setIsSubmitting(true);
     
     try {
-      // Generate a report ID (in a real app this would be from a database)
       const generatedId = `SS-${Math.floor(100000 + Math.random() * 900000)}`;
       setReportId(generatedId);
       
-      // Create a new report object
       const newReport = {
         id: generatedId,
-        crimeType: data.crimeType,
+        crime_type: data.crimeType,
         description: data.description,
         location: data.location,
         date: data.date,
         status: 'pending',
-        priority: Math.random() > 0.7 ? 'high' : Math.random() > 0.5 ? 'medium' : 'low',
-        userDetails: {
-          pseudonym: user?.pseudonym || 'Anonymous'
-        },
-        evidence: evidenceFiles.map((file, index) => ({
-          id: `ev-${index}`,
-          filename: file.name,
-          type: file.type.includes('image') ? 'image' : 
-                file.type.includes('video') ? 'video' :
-                file.type.includes('pdf') ? 'pdf' : 'document',
-          url: URL.createObjectURL(file),
-          size: `${(file.size / (1024 * 1024)).toFixed(2)} MB`
-        }))
+        evidence_urls: evidenceFiles.map((file) => URL.createObjectURL(file)),
+        user_id: user?.id || null
       };
       
-      // Get existing reports from localStorage
-      const existingReports = localStorage.getItem('userReports');
-      const reports = existingReports ? JSON.parse(existingReports) : [];
+      if (user) {
+        const { error } = await supabase
+          .from('reports')
+          .insert([newReport]);
+          
+        if (error) {
+          console.error("Error saving to Supabase:", error);
+          saveToLocalStorage(newReport);
+        } else {
+          console.log("Report saved to Supabase successfully");
+        }
+      } else {
+        saveToLocalStorage(newReport);
+      }
       
-      // Add the new report
-      reports.push(newReport);
-      
-      // Save back to localStorage
-      localStorage.setItem('userReports', JSON.stringify(reports));
-      
-      // Show success toast
       toast({
         title: "Report Submitted",
         description: "Your crime report has been successfully submitted.",
       });
       
-      // Move to the success step
       setCurrentStep(4);
     } catch (error) {
+      console.error("Submission error:", error);
       toast({
         title: "Submission Failed",
         description: "There was an error submitting your report. Please try again.",
@@ -122,6 +111,15 @@ const ReportCrime = () => {
     } finally {
       setIsSubmitting(false);
     }
+  };
+  
+  const saveToLocalStorage = (report: any) => {
+    const existingReports = localStorage.getItem('userReports');
+    const reports = existingReports ? JSON.parse(existingReports) : [];
+    
+    reports.push(report);
+    
+    localStorage.setItem('userReports', JSON.stringify(reports));
   };
 
   const handleNext = () => {
@@ -159,7 +157,6 @@ const ReportCrime = () => {
             </p>
           </div>
           
-          {/* Progress Steps */}
           <div className="max-w-3xl mx-auto mb-8">
             <div className="flex justify-between">
               {[1, 2, 3, 4].map(step => (
@@ -194,7 +191,6 @@ const ReportCrime = () => {
             transition={{ duration: 0.5 }}
           >
             <form onSubmit={handleSubmit(onSubmit)}>
-              {/* Step 1: Crime Details */}
               {currentStep === 1 && (
                 <div className="space-y-6">
                   <h2 className="text-xl font-semibold mb-4">Crime Details</h2>
@@ -203,7 +199,7 @@ const ReportCrime = () => {
                     <Label htmlFor="crimeType">Crime Type</Label>
                     <select 
                       id="crimeType"
-                      className="w-full bg-safespeak-dark-accent border-white/10 rounded-md p-2"
+                      className="w-full bg-safespeak-dark-accent text-white border-white/10 rounded-md p-2"
                       {...register("crimeType", { required: true })}
                       defaultValue={aiDetectedType || ""}
                     >
@@ -243,7 +239,6 @@ const ReportCrime = () => {
                 </div>
               )}
               
-              {/* Step 2: Location & Date */}
               {currentStep === 2 && (
                 <div className="space-y-6">
                   <h2 className="text-xl font-semibold mb-4">Location & Date</h2>
@@ -295,7 +290,6 @@ const ReportCrime = () => {
                 </div>
               )}
               
-              {/* Step 3: Evidence Upload */}
               {currentStep === 3 && (
                 <div className="space-y-6">
                   <h2 className="text-xl font-semibold mb-4">Upload Evidence</h2>
@@ -331,7 +325,6 @@ const ReportCrime = () => {
                 </div>
               )}
               
-              {/* Step 4: Success */}
               {currentStep === 4 && (
                 <div className="text-center space-y-6">
                   <div className="flex justify-center">
