@@ -1,3 +1,4 @@
+
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import { Shield, Lock, User, Users } from 'lucide-react';
@@ -49,9 +50,7 @@ const HomePage = () => {
                 <Button asChild className="w-full bg-trust-chain-blue hover:bg-trust-chain-blue/90">
                   <Link to="/login">Login</Link>
                 </Button>
-                <Button asChild variant="outline" className="w-full">
-                  <Link to="/register">Create Anonymous Profile</Link>
-                </Button>
+                {/* REMOVED: Button asChild variant="outline" for Create Anonymous Profile */}
               </div>
             </motion.div>
             
@@ -70,9 +69,7 @@ const HomePage = () => {
                 <Button asChild className="w-full bg-trust-chain-green hover:bg-trust-chain-green/90">
                   <Link to="/admin-login">Admin Login</Link>
                 </Button>
-                <Button asChild variant="outline" className="w-full">
-                  <Link to="/admin-register">Register as Admin</Link>
-                </Button>
+                {/* REMOVED: Button asChild variant="outline" for Register as Admin */}
               </div>
             </motion.div>
           </div>
